@@ -1,12 +1,16 @@
+"use client";
+
 import Image from "next/image";
 import logoFull from "@/assets/images/logo-full.svg";
-import logo from "@/assets/images/logo.svg";
 import bg from "@/assets/images/bg.png";
 import hero from "@/assets/images/hero-big.svg";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import Link from "next/link";
+import { useWeb5 } from "@/contexts/Web5Context";
+import { cn } from "@/lib/utils";
 
 export default function Home() {
+  const { currentDid } = useWeb5();
   return (
     <div>
       <header>
@@ -16,7 +20,9 @@ export default function Home() {
           </Link>
           <ul>
             <li>
-              <Button>Login</Button>
+              <Link className={cn(buttonVariants())} href="/profile/create">
+                {currentDid ? "Create Profile" : "Create DID"}
+              </Link>
             </li>
           </ul>
         </nav>
