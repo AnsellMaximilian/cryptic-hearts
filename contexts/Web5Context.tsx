@@ -8,7 +8,8 @@ import React, {
   useState,
 } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Web5 } from "@web5/api";
+import { ProtocolsConfigureRequest, Web5 } from "@web5/api";
+import { useToast } from "@/components/ui/use-toast";
 
 export interface Web5ContextData {
   currentDid: string | null;
@@ -26,6 +27,73 @@ export const Web5Context = createContext<Web5ContextData>({
   setWeb5: () => {},
 });
 
+export const protocolDefinition: ProtocolsConfigureRequest["message"]["definition"] =
+  {
+    protocol: "http://ansellmaximilian.github.io/crypticheartsprotocol",
+    published: true,
+    types: {
+      profile: {
+        schema:
+          "http://ansellmaximilian.github.io/crypticheartsprotocol/profile",
+        dataFormats: ["application/json"],
+      },
+      profileImage: {
+        schema:
+          "http://ansellmaximilian.github.io/crypticheartsprotocol/profileImage",
+
+        dataFormats: ["image/jpeg"],
+      },
+      match: {
+        schema: "http://ansellmaximilian.github.io/crypticheartsprotocol/match",
+
+        dataFormats: ["application/json"],
+      },
+      message: {
+        schema:
+          "http://ansellmaximilian.github.io/crypticheartsprotocol/message",
+
+        dataFormats: ["text/plain"],
+      },
+    },
+    structure: {
+      profile: {
+        $actions: [
+          { who: "anyone", can: "write" },
+          { who: "anyone", can: "read" },
+        ],
+        profileImage: {
+          $actions: [
+            {
+              who: "author",
+              of: "profile",
+              can: "write",
+            },
+          ],
+        },
+      },
+      match: {
+        $actions: [
+          { who: "anyone", can: "write" },
+          { who: "anyone", can: "read" },
+        ],
+        message: {
+          $actions: [
+            {
+              who: "author",
+              of: "match",
+              can: "write",
+            },
+            {
+              who: "recipient",
+              of: "match",
+              can: "write",
+            },
+          ],
+        },
+      },
+    },
+  };
+
 export const Web5ContextProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
@@ -34,12 +102,35 @@ export const Web5ContextProvider: React.FC<{ children: ReactNode }> = ({
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const currentRoute = usePathname();
+  const { toast } = useToast();
 
   useEffect(() => {
     (async () => {
       const { web5, did } = await Web5.connect();
       setCurrentDid(did);
       setWeb5(web5);
+
+      try {
+        const { protocol, status: localStatus } =
+          await web5.dwn.protocols.configure({
+            message: {
+              definition: protocolDefinition,
+            },
+          });
+        toast({
+          title: localStatus.detail,
+          description: "Protocol has been successfully installed locally",
+        });
+        if (protocol) {
+          const { status: remoteStatus } = await protocol.send(did);
+          toast({
+            title: remoteStatus.detail,
+            description: "Protocol has been successfully installed locally",
+          });
+        }
+      } catch (error) {
+        console.log(error);
+      }
     })();
   }, []);
 
