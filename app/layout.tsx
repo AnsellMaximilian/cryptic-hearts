@@ -17,7 +17,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${inter.className} bg-[#ffffff]`}>
+      <body
+        className={`${inter.className} bg-[#ffffff] flex flex-col min-h-screen`}
+      >
         <Web5ContextProvider>{children}</Web5ContextProvider>
       </body>
     </html>
