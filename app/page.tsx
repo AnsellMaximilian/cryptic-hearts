@@ -20,8 +20,11 @@ export default function Home() {
           </Link>
           <ul>
             <li>
-              <Link className={cn(buttonVariants())} href="/profile/create">
-                {currentDid ? "Create Profile" : "Create DID"}
+              <Link
+                className={cn(buttonVariants())}
+                href={currentDid ? "/profile" : "/profile/create"}
+              >
+                {currentDid ? "Profile" : "Create Profile"}
               </Link>
             </li>
           </ul>

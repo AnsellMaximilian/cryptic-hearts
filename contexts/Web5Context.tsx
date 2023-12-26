@@ -17,6 +17,8 @@ export interface Web5ContextData {
   setCurrentDid: (did: string | null) => void;
   web5: Web5 | null;
   setWeb5: (web5: Web5 | null) => void;
+  profile: Profile | null;
+  setProfile: (profile: Profile | null) => void;
 }
 
 export const Web5Context = createContext<Web5ContextData>({
@@ -25,7 +27,16 @@ export const Web5Context = createContext<Web5ContextData>({
   setCurrentDid: () => {},
   web5: null,
   setWeb5: () => {},
+  profile: null,
+  setProfile: () => {},
 });
+
+export type Profile = {
+  username: string;
+  fullName: string;
+  description: string;
+  dateOfBirth: Date;
+};
 
 export const protocolDefinition: ProtocolsConfigureRequest["message"]["definition"] =
   {
@@ -100,8 +111,7 @@ export const Web5ContextProvider: React.FC<{ children: ReactNode }> = ({
   const [currentDid, setCurrentDid] = useState<string | null>(null);
   const [web5, setWeb5] = useState<Web5 | null>(null);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
-  const currentRoute = usePathname();
+  const [profile, setProfile] = useState<null | Profile>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -142,6 +152,8 @@ export const Web5ContextProvider: React.FC<{ children: ReactNode }> = ({
         loading,
         web5,
         setWeb5,
+        profile,
+        setProfile,
       }}
     >
       {children}
