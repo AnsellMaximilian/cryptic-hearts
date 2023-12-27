@@ -71,7 +71,7 @@ export default function ConnectPage() {
                           <Check className="mr-2 h-4 w-4" /> Connect
                         </Button>
                         <Button
-                          className="w-full bg-[#DEE100] hover:bg-[#fafd5e]"
+                          className="w-full bg-[#FFEC19] hover:bg-[#fafd5e] text-black"
                           onClick={() => {
                             if (api) {
                               api.scrollNext();
@@ -80,7 +80,7 @@ export default function ConnectPage() {
                         >
                           <Heart
                             className="mr-2 h-4 w-4 text-red-600"
-                            strokeWidth={3}
+                            strokeWidth={5}
                           />{" "}
                           Unlock
                         </Button>

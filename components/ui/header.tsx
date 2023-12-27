@@ -30,7 +30,7 @@ const HeaderLink = ({
         )}
       >
         <span
-          className={`opacity-0 group-hover:opacity-100 transition-all duration-100 absolute -translate-x-4 text-[#DEE100] ${
+          className={`opacity-0 group-hover:opacity-100 transition-all duration-100 absolute -translate-x-4 text-[#FFEC19] ${
             isActive && "opacity-100"
           }`}
         >
@@ -52,7 +52,7 @@ export default function Header({ className }: { className?: string }) {
         <ul className="flex gap-8 items-center">
           <HeaderLink href="/profile" text="Profile" />
           <HeaderLink href="/connect" text="Connect" />
-          <HeaderLink href="/profile" text="Posts" />
+          <HeaderLink href="/posts" text="Posts" />
         </ul>
       </nav>
     </header>

@@ -94,7 +94,7 @@ export default function Home() {
 
   return (
     <div
-      className="bg-[#DEE100] grow bg-[length:600px] bg-bottom bg-repeat-x relative"
+      className="bg-[#FFEC19] grow bg-[length:600px] bg-bottom bg-repeat-x relative"
       style={{ backgroundImage: `url('${dots.src}')` }}
     >
       <Link

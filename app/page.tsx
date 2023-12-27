@@ -51,7 +51,7 @@ export default function Home() {
             className="grow bg-no-repeat bg-right bg-contain"
           ></div>
         </section>
-        <section className="py-24 bg-[#DEE100] bg-gradient-to-b from-[#DEE100] via-[#DEE100] to-white ">
+        <section className="py-24 bg-[#FFEC19] bg-gradient-to-b from-[#FFEC19] via-[#FFEC19] to-white ">
           <h2>Features</h2>
         </section>
         <section className="py-12"></section>
