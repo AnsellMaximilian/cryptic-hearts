@@ -2,7 +2,7 @@
 import logoFull from "@/assets/images/logo-full.svg";
 
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Profile, protocolDefinition, useWeb5 } from "@/contexts/Web5Context";
+import { Profile, useWeb5 } from "@/contexts/Web5Context";
 import { cn, collapseDid } from "@/lib/utils";
 import { ArrowLeft, Copy } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";

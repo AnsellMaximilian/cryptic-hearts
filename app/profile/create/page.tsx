@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, buttonVariants } from "@/components/ui/button";
-import { protocolDefinition, useWeb5 } from "@/contexts/Web5Context";
+import { useWeb5 } from "@/contexts/Web5Context";
 import { cn, collapseDid } from "@/lib/utils";
 import { ArrowLeft, Copy } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,6 +29,7 @@ import {
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { useEffect } from "react";
+import { protocolDefinition } from "@/lib/protocols";
 const formSchema = z.object({
   username: z.string().min(2).max(50),
   fullName: z.string().min(2).max(50),

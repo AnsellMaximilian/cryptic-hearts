@@ -10,6 +10,7 @@ import React, {
 import { usePathname, useRouter } from "next/navigation";
 import { ProtocolsConfigureRequest, Web5 } from "@web5/api";
 import { useToast } from "@/components/ui/use-toast";
+import { protocolDefinition } from "@/lib/protocols";
 
 export interface Web5ContextData {
   currentDid: string | null;
@@ -37,73 +38,6 @@ export type Profile = {
   description: string;
   dateOfBirth: Date;
 };
-
-export const protocolDefinition: ProtocolsConfigureRequest["message"]["definition"] =
-  {
-    protocol: "http://ansellmaximilian.github.io/crypticheartsprotocol",
-    published: true,
-    types: {
-      profile: {
-        schema:
-          "http://ansellmaximilian.github.io/crypticheartsprotocol/profile",
-        dataFormats: ["application/json"],
-      },
-      profileImage: {
-        schema:
-          "http://ansellmaximilian.github.io/crypticheartsprotocol/profileImage",
-
-        dataFormats: ["image/jpeg"],
-      },
-      match: {
-        schema: "http://ansellmaximilian.github.io/crypticheartsprotocol/match",
-
-        dataFormats: ["application/json"],
-      },
-      message: {
-        schema:
-          "http://ansellmaximilian.github.io/crypticheartsprotocol/message",
-
-        dataFormats: ["text/plain"],
-      },
-    },
-    structure: {
-      profile: {
-        $actions: [
-          { who: "anyone", can: "write" },
-          { who: "anyone", can: "read" },
-        ],
-        profileImage: {
-          $actions: [
-            {
-              who: "author",
-              of: "profile",
-              can: "write",
-            },
-          ],
-        },
-      },
-      match: {
-        $actions: [
-          { who: "anyone", can: "write" },
-          { who: "anyone", can: "read" },
-        ],
-        message: {
-          $actions: [
-            {
-              who: "author",
-              of: "match",
-              can: "write",
-            },
-            {
-              who: "recipient",
-              of: "match",
-              can: "write",
-            },
-          ],
-        },
-      },
-    },
-  };
 
 export const Web5ContextProvider: React.FC<{ children: ReactNode }> = ({
   children,

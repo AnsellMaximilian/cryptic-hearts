@@ -2,7 +2,7 @@
 import logoFull from "@/assets/images/logo-full.svg";
 
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Profile, protocolDefinition, useWeb5 } from "@/contexts/Web5Context";
+import { Profile, useWeb5 } from "@/contexts/Web5Context";
 import { cn, collapseDid } from "@/lib/utils";
 import { ArrowLeft, Copy } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,11 +28,14 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import Link from "next/link";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Header from "@/components/ui/header";
+import { protocolDefinition } from "@/lib/protocols";
 
 export default function ProfilePage() {
   const { currentDid, web5, setProfile, profile } = useWeb5();
@@ -70,7 +73,7 @@ export default function ProfilePage() {
         <h1 className="text-3xl font-semibold text-center mb-4">
           Your Profile
         </h1>
-        <section>
+        <section className="mb-12 pb-4 border-b border-border">
           {profile ? (
             <div>
               <h2 className="text-2xl font-semibold">{profile.fullName}</h2>
@@ -82,6 +85,22 @@ export default function ProfilePage() {
           ) : (
             "loading..."
           )}
+        </section>
+        <section>
+          <Tabs defaultValue="following" className="w-[400px]">
+            <TabsList>
+              <TabsTrigger value="following">Following</TabsTrigger>
+              <TabsTrigger value="followers">Followers</TabsTrigger>
+            </TabsList>
+            <TabsContent value="following">
+              <div className="text-muted-foreground">People you follow.</div>
+            </TabsContent>
+            <TabsContent value="followers">
+              <div className="text-muted-foreground">
+                People who follow you.
+              </div>
+            </TabsContent>
+          </Tabs>
         </section>
       </div>
     </div>
