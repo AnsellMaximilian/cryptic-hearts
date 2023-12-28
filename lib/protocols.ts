@@ -44,7 +44,7 @@ export const protocolDefinition: ProtocolsConfigureRequest["message"]["definitio
       profile: {
         $actions: [
           { who: "anyone", can: "write" },
-          { who: "anyone", can: "read" },
+          { who: "author", of: "profile", can: "read" },
         ],
         profileImage: {
           $actions: [

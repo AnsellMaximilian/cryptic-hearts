@@ -10,7 +10,7 @@ import { useWeb5 } from "@/contexts/Web5Context";
 import { cn } from "@/lib/utils";
 
 export default function Home() {
-  const { currentDid } = useWeb5();
+  const { currentDid, profile } = useWeb5();
   return (
     <div>
       <header>
@@ -22,9 +22,9 @@ export default function Home() {
             <li>
               <Link
                 className={cn(buttonVariants())}
-                href={currentDid ? "/profile" : "/profile/create"}
+                href={profile ? "/profile" : "/profile/create"}
               >
-                {currentDid ? "Profile" : "Create Profile"}
+                {profile ? "Profile" : "Create Profile"}
               </Link>
             </li>
           </ul>

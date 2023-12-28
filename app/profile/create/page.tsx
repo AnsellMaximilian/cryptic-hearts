@@ -8,6 +8,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Popover,
   PopoverContent,
@@ -35,7 +45,11 @@ const formSchema = z.object({
   username: z.string().min(2).max(50),
   fullName: z.string().min(2).max(50),
   dateOfBirth: z.date().optional(),
+  city: z.string().min(2),
+  country: z.string().min(2),
+  occupation: z.string().min(2),
   description: z.string().optional(),
+  gender: z.enum(["MALE", "FEMALE", "CUSTOM"]),
 });
 
 export default function Home() {
@@ -46,6 +60,7 @@ export default function Home() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       username: "",
+      gender: "MALE",
     },
   });
 
@@ -57,6 +72,10 @@ export default function Home() {
           data: {
             username: values.username,
             fullName: values.fullName,
+            gender: values.gender,
+            city: values.city,
+            country: values.country,
+            occupation: values.occupation,
             description: values.description,
             dateOfBirth: values.dateOfBirth
               ? format(values.dateOfBirth, "yyyy-MM-dd")
@@ -76,7 +95,6 @@ export default function Home() {
         contextId: profileRecord?.contextId,
       });
 
-      console.log({ profileRecord, createStatus });
       router.push("/profile");
     }
   }
@@ -115,9 +133,11 @@ export default function Home() {
                   <FormItem>
                     <FormLabel>Username</FormLabel>
                     <FormControl>
-                      <Input placeholder="shadcn" {...field} />
+                      <Input placeholder="johndoe23" {...field} />
                     </FormControl>
-                    <FormDescription>Your handle.</FormDescription>
+                    <FormDescription>
+                      Your handle. This will automatically be public{" "}
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -129,9 +149,37 @@ export default function Home() {
                   <FormItem>
                     <FormLabel>Full Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="shadcn" {...field} />
+                      <Input placeholder="John Doe" {...field} />
                     </FormControl>
                     <FormDescription>Your full name.</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="gender"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Gender</FormLabel>
+                    <FormControl>
+                      <RadioGroup defaultValue="male" className="flex gap-4">
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="male" id="male" />
+                          <Label htmlFor="male">Male</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="female" id="female" />
+                          <Label htmlFor="female">Female</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="Custom" id="Custom" />
+                          <Label htmlFor="Custom">Custom</Label>
+                        </div>
+                      </RadioGroup>
+                    </FormControl>
+                    <FormDescription>Your gender.</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -144,7 +192,7 @@ export default function Home() {
                     <FormLabel>Description</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Type your message here."
+                        placeholder="I'm an easy-going scuba diver."
                         {...field}
                       />
                     </FormControl>
@@ -155,6 +203,54 @@ export default function Home() {
                   </FormItem>
                 )}
               />
+              <div>
+                <div className="flex gap-4">
+                  <FormField
+                    control={form.control}
+                    name="city"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>City</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Jakarta" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="country"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Country</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Indonesia" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Your origins.
+                </p>
+              </div>
+              <FormField
+                control={form.control}
+                name="occupation"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Occupation</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Web5 Developer" {...field} />
+                    </FormControl>
+                    <FormDescription>Your occupation/job.</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <FormField
                 control={form.control}
                 name="dateOfBirth"
@@ -165,21 +261,48 @@ export default function Home() {
                       <div>
                         <Popover>
                           <PopoverTrigger asChild>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-[280px] justify-start text-left font-normal",
-                                !form.getValues("dateOfBirth") &&
-                                  "text-muted-foreground"
-                              )}
-                            >
-                              <CalendarIcon className="mr-2 h-4 w-4" />
-                              {form.getValues("dateOfBirth") ? (
-                                format(form.getValues("dateOfBirth")!, "PPP")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                            </Button>
+                            <div className="flex gap-4">
+                              <Button
+                                variant={"outline"}
+                                type="button"
+                                className={cn(
+                                  "w-[280px] justify-start text-left font-normal",
+                                  !form.getValues("dateOfBirth") &&
+                                    "text-muted-foreground"
+                                )}
+                              >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {form.getValues("dateOfBirth") ? (
+                                  format(form.getValues("dateOfBirth")!, "PPP")
+                                ) : (
+                                  <span>Pick a date</span>
+                                )}
+                              </Button>
+                              <Select
+                                onValueChange={(value) => {
+                                  const currentDate =
+                                    form.getValues("dateOfBirth") ?? new Date();
+                                  currentDate.setFullYear(parseInt(value));
+                                  form.setValue("dateOfBirth", currentDate);
+                                }}
+                              >
+                                <SelectTrigger className="w-[180px]">
+                                  <SelectValue placeholder="Year" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {Array.from({ length: 120 }).map(
+                                    (_, index) => (
+                                      <SelectItem
+                                        value={index + 1900 + ""}
+                                        key={index + 1900}
+                                      >
+                                        {index + 1900}
+                                      </SelectItem>
+                                    )
+                                  )}
+                                </SelectContent>
+                              </Select>
+                            </div>
                           </PopoverTrigger>
                           <PopoverContent className="w-auto p-0">
                             <Calendar

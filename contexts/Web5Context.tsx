@@ -35,10 +35,15 @@ export const Web5Context = createContext<Web5ContextData>({
 export type Profile = {
   recordId: string;
   contextId: string;
+
   username: string;
   fullName: string;
   description: string;
   dateOfBirth: Date;
+  occupation: string;
+  gender: string;
+  city: string;
+  country: string;
 };
 
 export const Web5ContextProvider: React.FC<{ children: ReactNode }> = ({
@@ -98,12 +103,10 @@ export const Web5ContextProvider: React.FC<{ children: ReactNode }> = ({
             contextId: profiles[0].contextId,
           };
           setProfile(profile);
-        } else {
-          router.push("/profile/create");
         }
       }
     })();
-  }, []);
+  }, [toast]);
 
   return (
     <Web5Context.Provider

@@ -61,8 +61,6 @@ export default function ProfilePage() {
           },
         });
 
-        console.log({ followingRecords });
-
         const { records: followerRecords } = await web5.dwn.records.query({
           from: currentDid,
           message: {
@@ -74,7 +72,6 @@ export default function ProfilePage() {
             },
           },
         });
-        console.log({ followerRecords });
 
         if (followingRecords) {
           setFollowing(
