@@ -35,7 +35,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Header from "@/components/ui/header";
-import { protocolDefinition } from "@/lib/protocols";
+import { protocolDefinition, schemas } from "@/lib/protocols";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function ProfilePage() {
@@ -44,6 +44,7 @@ export default function ProfilePage() {
   const { toast } = useToast();
 
   const [following, setFollowing] = useState<string[]>([]);
+  const [followers, setFollowers] = useState<string[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -52,9 +53,28 @@ export default function ProfilePage() {
           message: {
             filter: {
               author: currentDid,
+
+              protocol: protocolDefinition.protocol,
+              protocolPath: "following",
+              schema: schemas.following,
             },
           },
         });
+
+        console.log({ followingRecords });
+
+        const { records: followerRecords } = await web5.dwn.records.query({
+          from: currentDid,
+          message: {
+            filter: {
+              recipient: currentDid,
+              protocol: protocolDefinition.protocol,
+              protocolPath: "following",
+              schema: schemas.following,
+            },
+          },
+        });
+        console.log({ followerRecords });
 
         if (followingRecords) {
           setFollowing(
@@ -67,9 +87,21 @@ export default function ProfilePage() {
             )
           );
         }
+
+        if (followerRecords) {
+          setFollowers(
+            Array.from(
+              new Set(
+                followerRecords
+                  .filter((record) => record.author)
+                  .map((record) => record.author)
+              )
+            )
+          );
+        }
       }
     })();
-  });
+  }, [web5, currentDid]);
 
   return (
     <div>
@@ -98,7 +130,7 @@ export default function ProfilePage() {
                     }
                   }}
                 >
-                  <CopyIcon size={14} /> {collapseDid(currentDid)}
+                  <CopyIcon size={14} /> {collapseDid(currentDid, 10)}
                 </Button>
               </div>
               <Link
@@ -122,9 +154,23 @@ export default function ProfilePage() {
                 {following.map((did) => (
                   <li
                     key={did}
-                    className="p-4 hover:bg-muted border-b border-border"
+                    className="p-4 hover:bg-muted border-b border-border flex justify-between items-center"
                   >
-                    {collapseDid(did, 10)}
+                    <div>{collapseDid(did, 10)}</div>
+
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={async () => {
+                        const res = await copyToClipboard(did);
+
+                        if (res) {
+                          toast({ title: "Copied to clipboard." });
+                        }
+                      }}
+                    >
+                      <CopyIcon />
+                    </Button>
                   </li>
                 ))}
               </ul>
@@ -133,6 +179,30 @@ export default function ProfilePage() {
               <div className="text-muted-foreground">
                 People who follow you.
               </div>
+              <ul>
+                {followers.map((did) => (
+                  <li
+                    key={did}
+                    className="p-4 hover:bg-muted border-b border-border flex justify-between items-center"
+                  >
+                    <div>{collapseDid(did, 10)}</div>
+
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={async () => {
+                        const res = await copyToClipboard(did);
+
+                        if (res) {
+                          toast({ title: "Copied to clipboard." });
+                        }
+                      }}
+                    >
+                      <CopyIcon />
+                    </Button>
+                  </li>
+                ))}
+              </ul>
             </TabsContent>
           </Tabs>
         </section>

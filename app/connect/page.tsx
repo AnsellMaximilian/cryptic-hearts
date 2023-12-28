@@ -67,6 +67,10 @@ export default function ConnectPage() {
           filter: {
             author: currentDid,
             recipient: values.did,
+            schema: schemas.following,
+
+            protocol: protocolDefinition.protocol,
+            protocolPath: "following",
           },
         },
       });
