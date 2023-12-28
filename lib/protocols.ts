@@ -10,6 +10,7 @@ export const schemas = {
   message: "http://ansellmaximilian.github.io/crypticheartsprotocol/message",
   following:
     "http://ansellmaximilian.github.io/crypticheartsprotocol/following",
+  test: "http://ansellmaximilian.github.io/crypticheartsprotocol/test",
 };
 
 export const protocolDefinition: ProtocolsConfigureRequest["message"]["definition"] =
@@ -34,6 +35,10 @@ export const protocolDefinition: ProtocolsConfigureRequest["message"]["definitio
         schema: schemas.following,
         dataFormats: ["text/plain"],
       },
+      test: {
+        schema: schemas.test,
+        dataFormats: ["text/plain"],
+      },
     },
     structure: {
       profile: {
@@ -50,20 +55,18 @@ export const protocolDefinition: ProtocolsConfigureRequest["message"]["definitio
             },
           ],
         },
-        following: {
-          $actions: [
-            {
-              who: "author",
-              of: "profile",
-              can: "write",
-            },
-            {
-              who: "author",
-              of: "profile",
-              can: "read",
-            },
-          ],
-        },
+      },
+      following: {
+        $actions: [
+          {
+            who: "anyone",
+            can: "write",
+          },
+          {
+            who: "anyone",
+            can: "read",
+          },
+        ],
       },
     },
   };

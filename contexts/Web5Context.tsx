@@ -10,7 +10,7 @@ import React, {
 import { usePathname, useRouter } from "next/navigation";
 import { ProtocolsConfigureRequest, Web5 } from "@web5/api";
 import { useToast } from "@/components/ui/use-toast";
-import { protocolDefinition } from "@/lib/protocols";
+import { protocolDefinition, schemas } from "@/lib/protocols";
 
 export interface Web5ContextData {
   currentDid: string | null;
@@ -33,6 +33,8 @@ export const Web5Context = createContext<Web5ContextData>({
 });
 
 export type Profile = {
+  recordId: string;
+  contextId: string;
   username: string;
   fullName: string;
   description: string;
@@ -47,6 +49,7 @@ export const Web5ContextProvider: React.FC<{ children: ReactNode }> = ({
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<null | Profile>(null);
   const { toast } = useToast();
+  const router = useRouter();
 
   useEffect(() => {
     (async () => {
@@ -69,11 +72,35 @@ export const Web5ContextProvider: React.FC<{ children: ReactNode }> = ({
           const { status: remoteStatus } = await protocol.send(did);
           toast({
             title: remoteStatus.detail,
-            description: "Protocol has been successfully installed locally",
+            description: "Protocol has been successfully installed remotely",
           });
         }
       } catch (error) {
         console.log(error);
+      }
+
+      if (web5 && did) {
+        const { records: profiles } = await web5.dwn.records.query({
+          message: {
+            filter: {
+              protocol: protocolDefinition.protocol,
+              protocolPath: "profile",
+              author: did,
+              schema: schemas.profile,
+            },
+          },
+        });
+
+        if (profiles?.length) {
+          const profile: Profile = {
+            ...(await profiles[0].data.json()),
+            recordId: profiles[0].id,
+            contextId: profiles[0].contextId,
+          };
+          setProfile(profile);
+        } else {
+          router.push("/profile/create");
+        }
       }
     })();
   }, []);

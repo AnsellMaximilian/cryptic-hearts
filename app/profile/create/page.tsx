@@ -29,7 +29,8 @@ import {
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { useEffect } from "react";
-import { protocolDefinition } from "@/lib/protocols";
+import { protocolDefinition, schemas } from "@/lib/protocols";
+import { useRouter } from "next/navigation";
 const formSchema = z.object({
   username: z.string().min(2).max(50),
   fullName: z.string().min(2).max(50),
@@ -38,7 +39,8 @@ const formSchema = z.object({
 });
 
 export default function Home() {
-  const { currentDid, web5 } = useWeb5();
+  const { currentDid, web5, setProfile } = useWeb5();
+  const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -46,26 +48,6 @@ export default function Home() {
       username: "",
     },
   });
-
-  useEffect(() => {
-    (async () => {
-      if (web5) {
-        const { records: profiles } = await web5.dwn.records.query({
-          message: {
-            filter: {
-              protocol: protocolDefinition.protocol,
-              protocolPath: "profile",
-            },
-          },
-        });
-
-        console.log(profiles);
-        if (profiles?.length) {
-          console.log(await profiles[0].data.json());
-        }
-      }
-    })();
-  }, [web5]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     console.log(values);
@@ -81,15 +63,21 @@ export default function Home() {
               : values.dateOfBirth,
           },
           message: {
-            schema:
-              "http://ansellmaximilian.github.io/crypticheartsprotocol/profile",
+            schema: schemas.profile,
             dataFormat: "application/json",
             protocol: protocolDefinition.protocol,
             protocolPath: "profile",
           },
         });
 
+      setProfile({
+        ...(await profileRecord?.data.json()),
+        recordId: profileRecord?.id,
+        contextId: profileRecord?.contextId,
+      });
+
       console.log({ profileRecord, createStatus });
+      router.push("/profile");
     }
   }
 
