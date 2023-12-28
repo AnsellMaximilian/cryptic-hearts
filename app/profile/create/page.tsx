@@ -88,7 +88,6 @@ export default function Home() {
             protocolPath: "profile",
           },
         });
-
       setProfile({
         ...(await profileRecord?.data.json()),
         recordId: profileRecord?.id,

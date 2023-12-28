@@ -3,8 +3,16 @@ import logoFull from "@/assets/images/logo-full.svg";
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Profile, useWeb5 } from "@/contexts/Web5Context";
-import { cn, collapseDid, copyToClipboard } from "@/lib/utils";
-import { ArrowLeft, Copy, CopyIcon } from "lucide-react";
+import { calculateAge, cn, collapseDid, copyToClipboard } from "@/lib/utils";
+import {
+  ArrowLeft,
+  Cake,
+  Copy,
+  CopyIcon,
+  LampDesk,
+  MapIcon,
+  MapPin,
+} from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
@@ -45,6 +53,8 @@ export default function ProfilePage() {
 
   const [following, setFollowing] = useState<string[]>([]);
   const [followers, setFollowers] = useState<string[]>([]);
+
+  console.log(profile);
 
   useEffect(() => {
     (async () => {
@@ -103,37 +113,66 @@ export default function ProfilePage() {
   return (
     <div>
       <Header />
-      <div className="max-w-3xl mx-auto mt-8">
+      <div className="max-w-3xl mx-auto mt-8 px-4">
         <h1 className="text-3xl font-semibold text-center mb-4">
           Your Profile
         </h1>
         <section className="mb-12 pb-4 border-b border-border">
           {profile && currentDid ? (
-            <div>
-              <div className="flex justify-between">
-                <h2 className="text-2xl font-semibold">{profile.fullName}</h2>
-                <Button
-                  variant="ghost"
-                  onClick={async () => {
-                    const res = await copyToClipboard(currentDid);
-                    if (res) {
-                      toast({
-                        title: "Copied DID to Clipboard.",
-                        description:
-                          "Succesfully copied your DID to clipboard.",
-                      });
-                    } else {
-                      console.log("NOT");
-                    }
-                  }}
-                >
-                  <CopyIcon size={14} /> {collapseDid(currentDid, 10)}
-                </Button>
+            <div className="space-y-4">
+              <div>
+                <div className="flex justify-between">
+                  <h2 className="text-2xl font-semibold">
+                    {profile.fullName},{" "}
+                    {calculateAge(new Date(), new Date(profile.dateOfBirth))}
+                  </h2>
+                  <Button
+                    variant="ghost"
+                    onClick={async () => {
+                      const res = await copyToClipboard(currentDid);
+                      if (res) {
+                        toast({
+                          title: "Copied DID to Clipboard.",
+                          description:
+                            "Succesfully copied your DID to clipboard.",
+                        });
+                      } else {
+                        console.log("NOT");
+                      }
+                    }}
+                  >
+                    <CopyIcon size={14} /> {collapseDid(currentDid, 10)}
+                  </Button>
+                </div>
+                <Link
+                  href="/profile"
+                  className="text-sm"
+                >{`@${profile.username}`}</Link>
               </div>
-              <Link
-                href="/profile"
-                className="text-sm"
-              >{`@${profile.username}`}</Link>
+              <ul className="">
+                <li className="flex gap-1 items-center text-sm">
+                  <MapPin size={16} />{" "}
+                  <span className="text-muted-foreground">
+                    {profile.city}, {profile.country}
+                  </span>
+                </li>
+                <li className="flex gap-1 items-center text-sm">
+                  <LampDesk size={16} />{" "}
+                  <span className="text-muted-foreground">
+                    {profile.occupation}
+                  </span>
+                </li>
+                <li className="flex gap-1 items-center text-sm">
+                  <Cake size={16} />{" "}
+                  <span className="text-muted-foreground">
+                    {format(new Date(profile.dateOfBirth), "dd MMM, yyyy")}
+                  </span>
+                </li>
+              </ul>
+              <div>
+                <h3 className="font-semibold text-lg">About Me</h3>
+                <p className="text-muted-foreground">{profile.description}</p>
+              </div>
             </div>
           ) : (
             "loading..."

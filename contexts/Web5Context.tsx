@@ -39,7 +39,7 @@ export type Profile = {
   username: string;
   fullName: string;
   description: string;
-  dateOfBirth: Date;
+  dateOfBirth: string;
   occupation: string;
   gender: string;
   city: string;

@@ -17,3 +17,11 @@ export const copyToClipboard = async (value: string) => {
     return false;
   }
 };
+
+export function calculateAge(currentDate: Date, birthdate: Date) {
+  const ageInMillis = currentDate.getTime() - birthdate.getTime();
+
+  const ageInYears = Math.abs(new Date(ageInMillis).getUTCFullYear() - 1970);
+
+  return ageInYears;
+}
