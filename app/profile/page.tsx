@@ -55,7 +55,7 @@ import Image from "next/image";
 import Header from "@/components/ui/header";
 import { protocolDefinition, schemas } from "@/lib/protocols";
 import { useToast } from "@/components/ui/use-toast";
-import { Following } from "@/lib/types";
+import { Follower, Following, SharedProfile } from "@/lib/types";
 
 export default function ProfilePage() {
   const { currentDid, web5, setProfile, profile } = useWeb5();
@@ -63,7 +63,7 @@ export default function ProfilePage() {
   const { toast } = useToast();
 
   const [following, setFollowing] = useState<Following[]>([]);
-  const [followers, setFollowers] = useState<string[]>([]);
+  const [followers, setFollowers] = useState<Follower[]>([]);
 
   console.log(profile);
 
@@ -99,27 +99,46 @@ export default function ProfilePage() {
             followingRecords.map((record) => record.data.json())
           )) as Following[];
           setFollowing(following);
-          // setFollowing(
-          //   Array.from(
-          //     new Set(
-          //       followingRecords
-          //         .filter((record) => record.recipient)
-          //         .map((record) => record.recipient)
-          //     )
-          //   )
-          // );
         }
 
         if (followerRecords) {
-          setFollowers(
-            Array.from(
-              new Set(
-                followerRecords
-                  .filter((record) => record.author)
-                  .map((record) => record.author)
-              )
-            )
+          const followers: Follower[] = await Promise.all<Follower>(
+            followerRecords.map((record) => {
+              return new Promise(async (resolve) => {
+                const followerData = await record.data.json();
+                const { records: sharedProfileRecords } =
+                  await web5.dwn.records.query({
+                    from: currentDid,
+                    message: {
+                      filter: {
+                        recipient: currentDid,
+                        parentId: record.id,
+                        protocol: protocolDefinition.protocol,
+                        protocolPath: "following/sharedProfile",
+                        schema: schemas.sharedProfile,
+                      },
+                    },
+                  });
+                if (sharedProfileRecords?.length) {
+                  const sharedProfile: SharedProfile =
+                    await sharedProfileRecords[0].data.json();
+                  resolve({ did: record.author, sharedProfile });
+                } else {
+                  resolve({ did: record.author });
+                }
+              });
+            })
           );
+          setFollowers(followers);
+          // setFollowers(
+          //   Array.from(
+          //     new Set(
+          //       followerRecords
+          //         .filter((record) => record.author)
+          //         .map((record) => record.author)
+          //     )
+          //   )
+          // );
         }
       }
     })();
@@ -244,7 +263,7 @@ export default function ProfilePage() {
                           </DropdownMenuItem>
                           <DropdownMenuItem>
                             <button className="flex gap-1 items-center">
-                              <User size={14} /> <span>Shared Account</span>
+                              <User size={14} /> <span>Shared Profile</span>
                             </button>
                           </DropdownMenuItem>
                           <DropdownMenuItem>
@@ -264,27 +283,51 @@ export default function ProfilePage() {
                 People who follow you.
               </div>
               <ul>
-                {followers.map((did) => (
+                {followers.map((follower) => (
                   <li
-                    key={did}
+                    key={follower.did}
                     className="p-4 hover:bg-muted border-b border-border flex justify-between items-center"
                   >
-                    <div>{collapseDid(did, 10)}</div>
+                    <div>
+                      <div className="text-sm font-semibold">
+                        {follower.sharedProfile?.username ?? "Anonymous"}
+                      </div>
+                      <div>{collapseDid(follower.did, 10)}</div>
+                    </div>
 
-                    <div className="flex gap-4">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={async () => {
-                          const res = await copyToClipboard(did);
+                    <div className="flex gap-4 items-center">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger>
+                          <Button
+                            className="hover:bg-white"
+                            variant="ghost"
+                            size="icon"
+                          >
+                            <MoreHorizontal size={16} />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuItem>
+                            <button
+                              onClick={async () => {
+                                const res = await copyToClipboard(follower.did);
 
-                          if (res) {
-                            toast({ title: "Copied to clipboard." });
-                          }
-                        }}
-                      >
-                        <CopyIcon />
-                      </Button>
+                                if (res) {
+                                  toast({ title: "Copied to clipboard." });
+                                }
+                              }}
+                              className="flex gap-1 items-center"
+                            >
+                              <Copy size={14} /> <span>Copy DID</span>
+                            </button>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <button className="flex gap-1 items-center">
+                              <User size={14} /> <span>Shared Profile</span>
+                            </button>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </li>
                 ))}

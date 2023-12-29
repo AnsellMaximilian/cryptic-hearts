@@ -16,3 +16,8 @@ export type Following = {
   did: string;
   assignedName: string;
 };
+
+export type Follower = {
+  did: string;
+  sharedProfile?: SharedProfile;
+};
