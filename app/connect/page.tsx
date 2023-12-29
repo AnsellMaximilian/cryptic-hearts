@@ -14,13 +14,24 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Header from "@/components/ui/header";
-import { useWeb5 } from "@/contexts/Web5Context";
+import { Profile, useWeb5 } from "@/contexts/Web5Context";
 import { Button } from "@/components/ui/button";
-import { BellRing, Check, Cross, Hand, Heart } from "lucide-react";
+import { BellRing, Check, Cross, Hand, Heart, Settings } from "lucide-react";
 import placeholder from "@/assets/images/placeholder.jpg";
 import type { CarouselApi } from "@/components/ui/carousel";
 import { UseEmblaCarouselType } from "embla-carousel-react";
@@ -39,18 +50,32 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
+import { SharedProfile } from "@/lib/types";
+import { Checkbox } from "@/components/ui/checkbox";
+import { camelCaseToSeparatedWords } from "@/lib/utils";
 const formSchema = z.object({
   did: z.string().min(2),
+  assignedName: z.string().min(2),
 });
 export default function ConnectPage() {
   const { currentDid, web5, setProfile, profile } = useWeb5();
   const router = useRouter();
   const { toast } = useToast();
   const [api, setApi] = useState<CarouselApi | undefined>();
+
+  const [sharedProfile, setSharedProfile] = useState<
+    Omit<SharedProfile, "contextId" | "recordId">
+  >({});
+
+  const [sharedProfileAttributes, setSharedProfileAttributes] = useState<
+    string[]
+  >([]);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       did: "",
+      assignedName: "",
     },
   });
   useEffect(() => {
@@ -79,12 +104,16 @@ export default function ConnectPage() {
         // already followed
         toast({ title: "Already following this user." });
       } else {
+        let toastMessage = "";
         const { record: followingRecord, status: createStatus } =
           await web5.dwn.records.create({
-            data: values.did,
+            data: {
+              did: values.did,
+              assignedName: values.assignedName,
+            },
             message: {
               schema: schemas.following,
-              dataFormat: "text/plain",
+              dataFormat: "application/json",
               protocol: protocolDefinition.protocol,
               protocolPath: "following",
               recipient: values.did,
@@ -95,13 +124,45 @@ export default function ConnectPage() {
           toast({ title: "Error Following", description: createStatus.detail });
         } else {
           if (followingRecord) {
-            const { status } = await followingRecord.send(values.did);
+            const { status: followSendStatus } = await followingRecord.send(
+              values.did
+            );
 
-            console.log(status);
-            toast({
-              title: "Followed!",
-              description: `Successfully followed ${values.did}`,
+            console.log({ followSendStatus });
+
+            const sharedProfile: { [key: string]: string } = {};
+            for (const key in profile) {
+              const safeKey = key as keyof Profile;
+              if (sharedProfileAttributes.includes(safeKey)) {
+                sharedProfile[safeKey] = profile[safeKey];
+              }
+            }
+
+            const {
+              record: sharedProfileRecord,
+              status: createSharedProfileStatus,
+            } = await web5.dwn.records.create({
+              data: sharedProfile,
+              message: {
+                parentId: followingRecord.id,
+                contextId: followingRecord.contextId,
+                schema: schemas.sharedProfile,
+                dataFormat: "application/json",
+                protocol: protocolDefinition.protocol,
+                protocolPath: "following/sharedProfile",
+                recipient: values.did,
+              },
             });
+            console.log(createSharedProfileStatus);
+            if (sharedProfileRecord) {
+              const { status: sharedProfileStatus } =
+                await sharedProfileRecord.send(values.did);
+              console.log({ sharedProfileStatus });
+              toast({
+                title: "Followed!",
+                description: `Successfully followed ${values.did}`,
+              });
+            }
           }
         }
       }
@@ -135,7 +196,91 @@ export default function ConnectPage() {
                     </FormItem>
                   )}
                 />
-                <Button type="submit">Follow</Button>
+                <FormField
+                  control={form.control}
+                  name="assignedName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Assign a label/name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Lucy from work..." {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="flex gap-4">
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="flex gap-1"
+                      >
+                        <Settings size={16} />
+                        <span>Shared Profile</span>
+                        <span className="ml-1 bg-primary text-primary-foreground rounded-full block w-4 h-4 text-xs">
+                          {sharedProfileAttributes.length}
+                        </span>
+                      </Button>
+                    </DialogTrigger>
+                    {profile && (
+                      <DialogContent className="sm:max-w-[425px]">
+                        <DialogHeader>
+                          <DialogTitle>Configure Shared Profile</DialogTitle>
+                          <DialogDescription>
+                            Choose which profile attributes you wish to share
+                            with people you follow.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                          {Object.keys(profile)
+                            .filter(
+                              (key) => key !== "contextId" && key !== "recordId"
+                            )
+                            .map((key) => (
+                              <div
+                                key={key}
+                                className="flex flex-row items-start space-x-3 space-y-0"
+                              >
+                                <FormControl>
+                                  <Checkbox
+                                    id={key}
+                                    checked={sharedProfileAttributes.includes(
+                                      key
+                                    )}
+                                    onCheckedChange={(checked) => {
+                                      setSharedProfileAttributes((prev) =>
+                                        checked
+                                          ? [...prev, key]
+                                          : prev.filter(
+                                              (existingKey) =>
+                                                existingKey !== key
+                                            )
+                                      );
+                                    }}
+                                  />
+                                </FormControl>
+                                <FormLabel
+                                  htmlFor={key}
+                                  className="font-normal"
+                                >
+                                  {camelCaseToSeparatedWords(key)}
+                                </FormLabel>
+                              </div>
+                            ))}
+                        </div>
+                        <DialogFooter>
+                          <DialogClose asChild>
+                            <Button type="submit">Configure</Button>
+                          </DialogClose>
+                        </DialogFooter>
+                      </DialogContent>
+                    )}
+                  </Dialog>
+
+                  <Button type="submit">Follow</Button>
+                </div>
               </form>
             </Form>
           </div>

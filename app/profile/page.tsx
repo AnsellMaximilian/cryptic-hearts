@@ -12,6 +12,9 @@ import {
   LampDesk,
   MapIcon,
   MapPin,
+  MoreHorizontal,
+  User,
+  X,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
@@ -37,7 +40,14 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -45,13 +55,14 @@ import Image from "next/image";
 import Header from "@/components/ui/header";
 import { protocolDefinition, schemas } from "@/lib/protocols";
 import { useToast } from "@/components/ui/use-toast";
+import { Following } from "@/lib/types";
 
 export default function ProfilePage() {
   const { currentDid, web5, setProfile, profile } = useWeb5();
   const router = useRouter();
   const { toast } = useToast();
 
-  const [following, setFollowing] = useState<string[]>([]);
+  const [following, setFollowing] = useState<Following[]>([]);
   const [followers, setFollowers] = useState<string[]>([]);
 
   console.log(profile);
@@ -84,15 +95,19 @@ export default function ProfilePage() {
         });
 
         if (followingRecords) {
-          setFollowing(
-            Array.from(
-              new Set(
-                followingRecords
-                  .filter((record) => record.recipient)
-                  .map((record) => record.recipient)
-              )
-            )
-          );
+          const following = (await Promise.all(
+            followingRecords.map((record) => record.data.json())
+          )) as Following[];
+          setFollowing(following);
+          // setFollowing(
+          //   Array.from(
+          //     new Set(
+          //       followingRecords
+          //         .filter((record) => record.recipient)
+          //         .map((record) => record.recipient)
+          //     )
+          //   )
+          // );
         }
 
         if (followerRecords) {
@@ -187,26 +202,59 @@ export default function ProfilePage() {
             <TabsContent value="following">
               <div className="text-muted-foreground">People you follow.</div>
               <ul>
-                {following.map((did) => (
+                {following.map((followingData) => (
                   <li
-                    key={did}
-                    className="p-4 hover:bg-muted border-b border-border flex justify-between items-center"
+                    key={followingData.did}
+                    className="p-4 hover:bg-accent border-b border-border flex justify-between items-center"
                   >
-                    <div>{collapseDid(did, 10)}</div>
+                    <div>
+                      <div className="text-sm font-semibold">
+                        {followingData.assignedName}
+                      </div>
+                      <div>{collapseDid(followingData.did, 10)}</div>
+                    </div>
 
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={async () => {
-                        const res = await copyToClipboard(did);
+                    <div className="flex gap-4 items-center">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger>
+                          <Button
+                            className="hover:bg-white"
+                            variant="ghost"
+                            size="icon"
+                          >
+                            <MoreHorizontal size={16} />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuItem>
+                            <button
+                              onClick={async () => {
+                                const res = await copyToClipboard(
+                                  followingData.did
+                                );
 
-                        if (res) {
-                          toast({ title: "Copied to clipboard." });
-                        }
-                      }}
-                    >
-                      <CopyIcon />
-                    </Button>
+                                if (res) {
+                                  toast({ title: "Copied to clipboard." });
+                                }
+                              }}
+                              className="flex gap-1 items-center"
+                            >
+                              <Copy size={14} /> <span>Copy DID</span>
+                            </button>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <button className="flex gap-1 items-center">
+                              <User size={14} /> <span>Shared Account</span>
+                            </button>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <button className="flex gap-1 items-center">
+                              <X size={14} /> <span>Unfollow</span>
+                            </button>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -223,19 +271,21 @@ export default function ProfilePage() {
                   >
                     <div>{collapseDid(did, 10)}</div>
 
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={async () => {
-                        const res = await copyToClipboard(did);
+                    <div className="flex gap-4">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={async () => {
+                          const res = await copyToClipboard(did);
 
-                        if (res) {
-                          toast({ title: "Copied to clipboard." });
-                        }
-                      }}
-                    >
-                      <CopyIcon />
-                    </Button>
+                          if (res) {
+                            toast({ title: "Copied to clipboard." });
+                          }
+                        }}
+                      >
+                        <CopyIcon />
+                      </Button>
+                    </div>
                   </li>
                 ))}
               </ul>
