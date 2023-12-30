@@ -105,7 +105,6 @@ export default function ProfilePage() {
           const followers: Follower[] = await Promise.all<Follower>(
             followerRecords.map((record) => {
               return new Promise(async (resolve) => {
-                const followerData = await record.data.json();
                 const { records: sharedProfileRecords } =
                   await web5.dwn.records.query({
                     from: currentDid,
@@ -130,15 +129,6 @@ export default function ProfilePage() {
             })
           );
           setFollowers(followers);
-          // setFollowers(
-          //   Array.from(
-          //     new Set(
-          //       followerRecords
-          //         .filter((record) => record.author)
-          //         .map((record) => record.author)
-          //     )
-          //   )
-          // );
         }
       }
     })();
@@ -262,9 +252,12 @@ export default function ProfilePage() {
                             </button>
                           </DropdownMenuItem>
                           <DropdownMenuItem>
-                            <button className="flex gap-1 items-center">
+                            <Link
+                              href={`/connect/${followingData.did}`}
+                              className="flex gap-1 items-center"
+                            >
                               <User size={14} /> <span>Shared Profile</span>
-                            </button>
+                            </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem>
                             <button className="flex gap-1 items-center">
@@ -322,9 +315,12 @@ export default function ProfilePage() {
                             </button>
                           </DropdownMenuItem>
                           <DropdownMenuItem>
-                            <button className="flex gap-1 items-center">
+                            <Link
+                              href={`/connect/${follower.did}`}
+                              className="flex gap-1 items-center"
+                            >
                               <User size={14} /> <span>Shared Profile</span>
-                            </button>
+                            </Link>
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
