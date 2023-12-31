@@ -65,8 +65,6 @@ export default function ProfilePage() {
   const [following, setFollowing] = useState<Following[]>([]);
   const [followers, setFollowers] = useState<Follower[]>([]);
 
-  console.log(profile);
-
   useEffect(() => {
     (async () => {
       if (web5 && currentDid) {
@@ -130,6 +128,24 @@ export default function ProfilePage() {
           );
           setFollowers(followers);
         }
+        // test
+
+        const { records: sentPostRecords } = await web5.dwn.records.query({
+          from: currentDid,
+          message: {
+            filter: {
+              recipient: currentDid,
+              protocol: protocolDefinition.protocol,
+              protocolPath: "post",
+              schema: schemas.post,
+            },
+          },
+        });
+
+        if (sentPostRecords?.length) {
+          const res = await sentPostRecords[0].data.json();
+          console.log(res);
+        }
       }
     })();
   }, [web5, currentDid]);
@@ -161,7 +177,6 @@ export default function ProfilePage() {
                             "Succesfully copied your DID to clipboard.",
                         });
                       } else {
-                        console.log("NOT");
                       }
                     }}
                   >
@@ -225,7 +240,7 @@ export default function ProfilePage() {
 
                     <div className="flex gap-4 items-center">
                       <DropdownMenu>
-                        <DropdownMenuTrigger>
+                        <DropdownMenuTrigger asChild>
                           <Button
                             className="hover:bg-white"
                             variant="ghost"

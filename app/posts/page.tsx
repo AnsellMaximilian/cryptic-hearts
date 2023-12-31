@@ -93,9 +93,8 @@ export default function PostsPage() {
   const [selectedDids, setSelectedDids] = useState<string[]>([]);
 
   const [posts, setPosts] = useState<Post[]>([]);
-
   const [selectedPostImage, setSelectedPostImage] = useState<File | null>(null);
-  console.log(posts);
+  console.log({ posts, selectedDids });
   useEffect(() => {
     (async () => {
       if (web5 && currentDid) {
@@ -183,7 +182,14 @@ export default function PostsPage() {
           },
         });
 
-        if (ownPostRecords && sentPostRecords) {
+        console.log({ sentPostRecords });
+
+        if (
+          ownPostRecords &&
+          sentPostRecords
+          // &&
+          // ownPostRecords.length === 100
+        ) {
           const posts = (await Promise.all(
             [...ownPostRecords, ...sentPostRecords].map(
               (record) =>
@@ -244,6 +250,7 @@ export default function PostsPage() {
 
     if (web5 && currentDid && profile) {
       const id = uuidv4();
+
       const posts = await Promise.all<Post>(
         selectedDids.map(
           (did) =>
@@ -356,7 +363,16 @@ export default function PostsPage() {
                         accept="image/jpeg, image/png"
                         onChange={(e) => {
                           if (e.target.files?.length) {
-                            setSelectedPostImage(e.target.files[0]);
+                            const imageSize = e.target.files[0].size;
+                            if (imageSize > 10240) {
+                              toast({
+                                title: "Image too big.",
+                                description:
+                                  "Sorry! At the moment we're limiting image sizes to 10kb",
+                              });
+                            } else {
+                              setSelectedPostImage(e.target.files[0]);
+                            }
                           }
                         }}
                       />
@@ -387,41 +403,39 @@ export default function PostsPage() {
                           </DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
-                          {following.map((followingData) => (
+                          {followers.map((follower) => (
                             <div
-                              key={followingData.did}
+                              key={follower.did}
                               className="flex flex-row items-start space-x-3 space-y-0"
                             >
                               <FormControl>
                                 <Checkbox
-                                  id={followingData.did}
-                                  checked={selectedDids.includes(
-                                    followingData.did
-                                  )}
+                                  id={follower.did}
+                                  checked={selectedDids.includes(follower.did)}
                                   onCheckedChange={(checked) => {
                                     setSelectedDids((prev) =>
                                       checked
-                                        ? [...prev, followingData.did]
+                                        ? [...prev, follower.did]
                                         : prev.filter(
                                             (existingKey) =>
-                                              existingKey !== followingData.did
+                                              existingKey !== follower.did
                                           )
                                     );
                                   }}
                                 />
                               </FormControl>
                               <FormLabel
-                                htmlFor={followingData.did}
+                                htmlFor={follower.did}
                                 className="font-normal flex flex-col"
                               >
                                 <span className="font-semibold">
-                                  {followingData.sharedProfile?.username
-                                    ? followingData.sharedProfile.username
-                                    : followingData.sharedProfile?.fullName
-                                    ? followingData.sharedProfile.fullName
-                                    : followingData.assignedName}
+                                  {follower.sharedProfile?.username
+                                    ? follower.sharedProfile.username
+                                    : follower.sharedProfile?.fullName
+                                    ? follower.sharedProfile.fullName
+                                    : "Anonymous"}
                                 </span>
-                                <span> {collapseDid(followingData.did)}</span>
+                                <span> {collapseDid(follower.did)}</span>
                               </FormLabel>
                             </div>
                           ))}
