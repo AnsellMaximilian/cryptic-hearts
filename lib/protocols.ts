@@ -12,6 +12,9 @@ export const schemas = {
     "http://ansellmaximilian.github.io/crypticheartsprotocol/following",
   sharedProfile:
     "http://ansellmaximilian.github.io/crypticheartsprotocol/sharedProfile",
+  post: "http://ansellmaximilian.github.io/crypticheartsprotocol/post",
+  postComment:
+    "http://ansellmaximilian.github.io/crypticheartsprotocol/postComment",
 };
 
 export const protocolDefinition: ProtocolsConfigureRequest["message"]["definition"] =
@@ -39,6 +42,14 @@ export const protocolDefinition: ProtocolsConfigureRequest["message"]["definitio
       sharedProfile: {
         schema: schemas.sharedProfile,
         dataFormats: ["application/json"],
+      },
+      post: {
+        schema: schemas.post,
+        dataFormats: ["application/json"],
+      },
+      postComment: {
+        schema: schemas.postComment,
+        dataFormats: ["text/plain"],
       },
     },
     structure: {
@@ -83,6 +94,48 @@ export const protocolDefinition: ProtocolsConfigureRequest["message"]["definitio
             {
               who: "recipient",
               of: "following",
+              can: "read",
+            },
+          ],
+        },
+      },
+      post: {
+        $actions: [
+          {
+            who: "anyone",
+            can: "write",
+          },
+          {
+            who: "recipient",
+            of: "post",
+            can: "read",
+          },
+          {
+            who: "author",
+            of: "post",
+            can: "read",
+          },
+        ],
+        postComment: {
+          $actions: [
+            {
+              who: "author",
+              of: "post",
+              can: "write",
+            },
+            {
+              who: "author",
+              of: "post",
+              can: "read",
+            },
+            {
+              who: "recipient",
+              of: "post",
+              can: "write",
+            },
+            {
+              who: "recipient",
+              of: "post",
               can: "read",
             },
           ],

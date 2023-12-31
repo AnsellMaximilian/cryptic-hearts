@@ -22,3 +22,13 @@ export type Follower = {
   did: string;
   sharedProfile?: SharedProfile;
 };
+
+export type Post = {
+  recordId: string;
+  content: string;
+  image?: string;
+  uniqueId: string;
+  authorId: string;
+  authorLabel: string;
+  dateCreated: string;
+};

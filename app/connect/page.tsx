@@ -63,10 +63,6 @@ export default function ConnectPage() {
   const { toast } = useToast();
   const [api, setApi] = useState<CarouselApi | undefined>();
 
-  const [sharedProfile, setSharedProfile] = useState<
-    Omit<SharedProfile, "contextId" | "recordId">
-  >({});
-
   const [sharedProfileAttributes, setSharedProfileAttributes] = useState<
     string[]
   >([]);
@@ -104,7 +100,6 @@ export default function ConnectPage() {
         // already followed
         toast({ title: "Already following this user." });
       } else {
-        let toastMessage = "";
         const { record: followingRecord, status: createStatus } =
           await web5.dwn.records.create({
             data: {
