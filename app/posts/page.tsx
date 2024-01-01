@@ -79,6 +79,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Follower, Following, Post, SharedProfile } from "@/lib/types";
 import { Checkbox } from "@/components/ui/checkbox";
 import { v4 as uuidv4 } from "uuid";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const formSchema = z.object({
   content: z.string().min(10),
@@ -92,12 +93,15 @@ export default function PostsPage() {
   const { toast } = useToast();
   const [selectedDids, setSelectedDids] = useState<string[]>([]);
 
+  const [postsLoading, setPostsLoading] = useState(true);
+
   const [posts, setPosts] = useState<Post[]>([]);
   const [selectedPostImage, setSelectedPostImage] = useState<File | null>(null);
   console.log({ posts, selectedDids });
   useEffect(() => {
     (async () => {
       if (web5 && currentDid) {
+        setPostsLoading(true);
         let following: Following[] = [];
         const { records: followingRecords } = await web5.dwn.records.query({
           message: {
@@ -224,6 +228,7 @@ export default function PostsPage() {
               })
           );
         }
+        setPostsLoading(false);
       }
     })();
   }, [web5, currentDid]);
@@ -455,36 +460,44 @@ export default function PostsPage() {
           </Form>
         </section>
         <section className="flex flex-col gap-4">
-          {posts.map((post) => (
-            <article
-              key={post.recordId}
-              className="rounded-md border-border border"
-            >
-              <header className="text-sm p-4 border-b border-border">
-                <div className="flex gap-1">
-                  <span className="font-semibold">{post.authorLabel}</span>
-                  <span className="text-muted-foreground">
-                    · {formatDistance(new Date(post.dateCreated), new Date())}
-                  </span>
-                </div>
-                <div>{collapseDid(post.authorId)}</div>
-              </header>
-              <div className="p-4 flex gap-4 bg-accent text-accent-foreground">
-                {post.image && (
-                  <div className="p-2 border border-border bg-white rounded-md">
-                    <Image
-                      alt="post image"
-                      src={"data:image/jpg;base64," + post.image}
-                      width={200}
-                      height={200}
-                      className="w-64"
-                    />
+          {postsLoading ? (
+            Array.from({ length: 5 }).map((_, index) => (
+              <Skeleton key={index} className="h-32" />
+            ))
+          ) : posts.length > 0 ? (
+            posts.map((post) => (
+              <article
+                key={post.recordId}
+                className="rounded-md border-border border"
+              >
+                <header className="text-sm p-4 border-b border-border">
+                  <div className="flex gap-1">
+                    <span className="font-semibold">{post.authorLabel}</span>
+                    <span className="text-muted-foreground">
+                      · {formatDistance(new Date(post.dateCreated), new Date())}
+                    </span>
                   </div>
-                )}
-                <div>{post.content}</div>
-              </div>
-            </article>
-          ))}
+                  <div>{collapseDid(post.authorId)}</div>
+                </header>
+                <div className="p-4 flex gap-4 bg-accent text-accent-foreground">
+                  {post.image && (
+                    <div className="p-2 border border-border bg-white rounded-md">
+                      <Image
+                        alt="post image"
+                        src={"data:image/jpg;base64," + post.image}
+                        width={200}
+                        height={200}
+                        className="w-64"
+                      />
+                    </div>
+                  )}
+                  <div>{post.content}</div>
+                </div>
+              </article>
+            ))
+          ) : (
+            <div className="text-center">No posts to show.</div>
+          )}
         </section>
       </div>
     </div>
