@@ -8,7 +8,7 @@ import React, {
   useState,
 } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { ProtocolsConfigureRequest, Web5 } from "@web5/api";
+import { type Web5 } from "@web5/api";
 import { useToast } from "@/components/ui/use-toast";
 import { protocolDefinition, schemas } from "@/lib/protocols";
 
@@ -58,6 +58,8 @@ export const Web5ContextProvider: React.FC<{ children: ReactNode }> = ({
 
   useEffect(() => {
     (async () => {
+      // @ts-ignore
+      const { Web5 } = await import("@web5/api");
       const { web5, did } = await Web5.connect();
       setCurrentDid(did);
       setWeb5(web5);
