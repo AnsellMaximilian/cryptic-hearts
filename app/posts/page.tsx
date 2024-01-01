@@ -301,7 +301,7 @@ export default function PostsPage() {
   return (
     <div>
       <Header />
-      <div className="max-w-3xl mx-auto mt-8 px-4">
+      <div className="max-w-3xl mx-auto mt-8 px-4 pb-8">
         <h1 className="text-3xl font-semibold text-center mb-4">Posts</h1>
         <section className="mb-12 pb-4 border-b border-border">
           <Form {...form}>

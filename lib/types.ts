@@ -32,3 +32,11 @@ export type Post = {
   authorLabel: string;
   dateCreated: string;
 };
+
+export type Message = {
+  recordId: string;
+  dateCreated: string;
+  repliedMessageId?: string;
+  authorId: string;
+  content: string;
+};

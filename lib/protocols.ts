@@ -31,10 +31,6 @@ export const protocolDefinition: ProtocolsConfigureRequest["message"]["definitio
 
         dataFormats: ["image/jpeg"],
       },
-      message: {
-        schema: schemas.message,
-        dataFormats: ["text/plain"],
-      },
       following: {
         schema: schemas.following,
         dataFormats: ["application/json"],
@@ -50,6 +46,10 @@ export const protocolDefinition: ProtocolsConfigureRequest["message"]["definitio
       postComment: {
         schema: schemas.postComment,
         dataFormats: ["text/plain"],
+      },
+      message: {
+        schema: schemas.message,
+        dataFormats: ["application/json"],
       },
     },
     structure: {
@@ -140,6 +140,24 @@ export const protocolDefinition: ProtocolsConfigureRequest["message"]["definitio
             },
           ],
         },
+      },
+      message: {
+        $actions: [
+          {
+            who: "anyone",
+            can: "write",
+          },
+          {
+            who: "recipient",
+            of: "message",
+            can: "read",
+          },
+          {
+            who: "author",
+            of: "message",
+            can: "read",
+          },
+        ],
       },
     },
   };
