@@ -10,6 +10,7 @@ import {
   Copy,
   CopyIcon,
   LampDesk,
+  Loader2,
   MapIcon,
   MapPin,
   MoreHorizontal,
@@ -58,16 +59,24 @@ import { useToast } from "@/components/ui/use-toast";
 import { Follower, Following, SharedProfile } from "@/lib/types";
 
 export default function ProfilePage() {
-  const { currentDid, web5, setProfile, profile } = useWeb5();
+  const {
+    currentDid,
+    web5,
+    setProfile,
+    profile,
+    loading: profileLoading,
+  } = useWeb5();
   const router = useRouter();
   const { toast } = useToast();
 
   const [following, setFollowing] = useState<Following[]>([]);
   const [followers, setFollowers] = useState<Follower[]>([]);
 
+  const [connectionLoading, setConnectionLoading] = useState(false);
   useEffect(() => {
     (async () => {
       if (web5 && currentDid) {
+        setConnectionLoading(true);
         const { records: followingRecords } = await web5.dwn.records.query({
           message: {
             filter: {
@@ -128,24 +137,8 @@ export default function ProfilePage() {
           );
           setFollowers(followers);
         }
-        // test
 
-        const { records: sentPostRecords } = await web5.dwn.records.query({
-          from: currentDid,
-          message: {
-            filter: {
-              recipient: currentDid,
-              protocol: protocolDefinition.protocol,
-              protocolPath: "post",
-              schema: schemas.post,
-            },
-          },
-        });
-
-        if (sentPostRecords?.length) {
-          const res = await sentPostRecords[0].data.json();
-          console.log(res);
-        }
+        setConnectionLoading(false);
       }
     })();
   }, [web5, currentDid]);
@@ -214,7 +207,10 @@ export default function ProfilePage() {
               </div>
             </div>
           ) : (
-            "loading..."
+            <div className="px-4 py-24 flex justify-center gap-4">
+              <div>Loading profile...</div>
+              <Loader2 size={24} className="animate-spin" />
+            </div>
           )}
         </section>
         <section>
@@ -225,124 +221,138 @@ export default function ProfilePage() {
             </TabsList>
             <TabsContent value="following">
               <div className="text-muted-foreground">People you follow.</div>
-              <ul>
-                {following.map((followingData) => (
-                  <li
-                    key={followingData.did}
-                    className="p-4 hover:bg-accent border-b border-border flex justify-between items-center"
-                  >
-                    <div>
-                      <div className="text-sm font-semibold">
-                        {followingData.assignedName}
+              {connectionLoading ? (
+                <div className="p-4 flex justify-center">
+                  <Loader2 className="animate-spin" />
+                </div>
+              ) : (
+                <ul>
+                  {following.map((followingData) => (
+                    <li
+                      key={followingData.did}
+                      className="p-4 hover:bg-accent border-b border-border flex justify-between items-center"
+                    >
+                      <div>
+                        <div className="text-sm font-semibold">
+                          {followingData.assignedName}
+                        </div>
+                        <div>{collapseDid(followingData.did, 10)}</div>
                       </div>
-                      <div>{collapseDid(followingData.did, 10)}</div>
-                    </div>
 
-                    <div className="flex gap-4 items-center">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            className="hover:bg-white"
-                            variant="ghost"
-                            size="icon"
-                          >
-                            <MoreHorizontal size={16} />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                          <DropdownMenuItem>
-                            <button
-                              onClick={async () => {
-                                const res = await copyToClipboard(
-                                  followingData.did
-                                );
+                      <div className="flex gap-4 items-center">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              className="hover:bg-white"
+                              variant="ghost"
+                              size="icon"
+                            >
+                              <MoreHorizontal size={16} />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                            <DropdownMenuItem>
+                              <button
+                                onClick={async () => {
+                                  const res = await copyToClipboard(
+                                    followingData.did
+                                  );
 
-                                if (res) {
-                                  toast({ title: "Copied to clipboard." });
-                                }
-                              }}
-                              className="flex gap-1 items-center"
-                            >
-                              <Copy size={14} /> <span>Copy DID</span>
-                            </button>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Link
-                              href={`/connect/${followingData.did}`}
-                              className="flex gap-1 items-center"
-                            >
-                              <User size={14} /> <span>Shared Profile</span>
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <button className="flex gap-1 items-center">
-                              <X size={14} /> <span>Unfollow</span>
-                            </button>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+                                  if (res) {
+                                    toast({ title: "Copied to clipboard." });
+                                  }
+                                }}
+                                className="flex gap-1 items-center"
+                              >
+                                <Copy size={14} /> <span>Copy DID</span>
+                              </button>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Link
+                                href={`/connect/${followingData.did}`}
+                                className="flex gap-1 items-center"
+                              >
+                                <User size={14} /> <span>Shared Profile</span>
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <button className="flex gap-1 items-center">
+                                <X size={14} /> <span>Unfollow</span>
+                              </button>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </TabsContent>
             <TabsContent value="followers">
               <div className="text-muted-foreground">
                 People who follow you.
               </div>
-              <ul>
-                {followers.map((follower) => (
-                  <li
-                    key={follower.did}
-                    className="p-4 hover:bg-muted border-b border-border flex justify-between items-center"
-                  >
-                    <div>
-                      <div className="text-sm font-semibold">
-                        {follower.sharedProfile?.username ?? "Anonymous"}
+              {connectionLoading ? (
+                <div className="p-4 flex justify-center">
+                  <Loader2 className="text-[#FFEC19]" />
+                </div>
+              ) : (
+                <ul>
+                  {followers.map((follower) => (
+                    <li
+                      key={follower.did}
+                      className="p-4 hover:bg-muted border-b border-border flex justify-between items-center"
+                    >
+                      <div>
+                        <div className="text-sm font-semibold">
+                          {follower.sharedProfile?.username ?? "Anonymous"}
+                        </div>
+                        <div>{collapseDid(follower.did, 10)}</div>
                       </div>
-                      <div>{collapseDid(follower.did, 10)}</div>
-                    </div>
 
-                    <div className="flex gap-4 items-center">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger>
-                          <Button
-                            className="hover:bg-white"
-                            variant="ghost"
-                            size="icon"
-                          >
-                            <MoreHorizontal size={16} />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                          <DropdownMenuItem>
-                            <button
-                              onClick={async () => {
-                                const res = await copyToClipboard(follower.did);
+                      <div className="flex gap-4 items-center">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              className="hover:bg-white"
+                              variant="ghost"
+                              size="icon"
+                            >
+                              <MoreHorizontal size={16} />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                            <DropdownMenuItem>
+                              <button
+                                onClick={async () => {
+                                  const res = await copyToClipboard(
+                                    follower.did
+                                  );
 
-                                if (res) {
-                                  toast({ title: "Copied to clipboard." });
-                                }
-                              }}
-                              className="flex gap-1 items-center"
-                            >
-                              <Copy size={14} /> <span>Copy DID</span>
-                            </button>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Link
-                              href={`/connect/${follower.did}`}
-                              className="flex gap-1 items-center"
-                            >
-                              <User size={14} /> <span>Shared Profile</span>
-                            </Link>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+                                  if (res) {
+                                    toast({ title: "Copied to clipboard." });
+                                  }
+                                }}
+                                className="flex gap-1 items-center"
+                              >
+                                <Copy size={14} /> <span>Copy DID</span>
+                              </button>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Link
+                                href={`/connect/${follower.did}`}
+                                className="flex gap-1 items-center"
+                              >
+                                <User size={14} /> <span>Shared Profile</span>
+                              </Link>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </TabsContent>
           </Tabs>
         </section>

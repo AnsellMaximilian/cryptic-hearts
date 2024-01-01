@@ -106,6 +106,7 @@ export const Web5ContextProvider: React.FC<{ children: ReactNode }> = ({
           };
           setProfile(profile);
         }
+        setLoading(false);
       }
     })();
   }, [toast]);
