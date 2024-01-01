@@ -94,10 +94,10 @@ export default function PostsPage() {
   const [selectedDids, setSelectedDids] = useState<string[]>([]);
 
   const [postsLoading, setPostsLoading] = useState(true);
+  const [isPosting, setIsPosting] = useState(false);
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [selectedPostImage, setSelectedPostImage] = useState<File | null>(null);
-  console.log({ posts, selectedDids });
   useEffect(() => {
     (async () => {
       if (web5 && currentDid) {
@@ -226,6 +226,12 @@ export default function PostsPage() {
                 }
                 return post;
               })
+              .sort((a, b) => {
+                const dateA = new Date(a.dateCreated);
+                const dateB = new Date(b.dateCreated);
+                console.log({ dateA, bro: a.dateCreated });
+                return dateB.getTime() - dateA.getTime();
+              })
           );
         }
         setPostsLoading(false);
@@ -241,6 +247,14 @@ export default function PostsPage() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (selectedDids.length <= 0) {
+      toast({
+        title: "No DIDs Selected",
+        description: "Please select at least one DID to share this post with.",
+      });
+      return;
+    }
+    setIsPosting(true);
     let base64Image: undefined | string;
 
     if (selectedPostImage) {
@@ -292,15 +306,23 @@ export default function PostsPage() {
                   resolve({
                     ...(await postRecord.data.json()),
                     recordId: postRecord.id,
+                    authorId: postRecord.author,
+                    authorLabel: profile.username,
+                    dateCreated: postRecord.dateCreated,
                   });
                 }
               }
             })
         )
       );
+      if (posts.length) {
+        setPosts((prev) => [posts[0], ...prev]);
+      }
     }
     form.setValue("content", "");
     setSelectedPostImage(null);
+    setIsPosting(false);
+    setSelectedDids([]);
   }
 
   return (
@@ -454,7 +476,9 @@ export default function PostsPage() {
                     )}
                   </Dialog>
                 </div>
-                <Button type="submit">Post</Button>
+                <Button type="submit" disabled={isPosting}>
+                  Post
+                </Button>
               </div>
             </form>
           </Form>
