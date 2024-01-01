@@ -61,6 +61,7 @@ export default function ConnectPage() {
   const { currentDid, web5, setProfile, profile } = useWeb5();
   const router = useRouter();
   const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
   const [api, setApi] = useState<CarouselApi | undefined>();
 
   const [sharedProfileAttributes, setSharedProfileAttributes] = useState<
@@ -82,7 +83,16 @@ export default function ConnectPage() {
   }, [api]);
 
   async function handleFollowDid(values: z.infer<typeof formSchema>) {
+    setLoading(true);
     if (web5 && currentDid && profile) {
+      const resolvedDid = await web5.did.resolve(values.did);
+
+      if (!resolvedDid.didDocument) {
+        toast({ title: "DID not found." });
+        form.reset();
+        setLoading(false);
+        return;
+      }
       const { records: followingRecords } = await web5.dwn.records.query({
         message: {
           filter: {
@@ -162,6 +172,8 @@ export default function ConnectPage() {
         }
       }
     }
+    setLoading(false);
+    form.reset();
   }
 
   return (
@@ -274,7 +286,9 @@ export default function ConnectPage() {
                     )}
                   </Dialog>
 
-                  <Button type="submit">Follow</Button>
+                  <Button type="submit" disabled={loading}>
+                    Follow
+                  </Button>
                 </div>
               </form>
             </Form>
