@@ -31,7 +31,16 @@ import Image from "next/image";
 import Header from "@/components/ui/header";
 import { Profile, useWeb5 } from "@/contexts/Web5Context";
 import { Button } from "@/components/ui/button";
-import { BellRing, Check, Cross, Hand, Heart, Settings } from "lucide-react";
+import {
+  BellRing,
+  Check,
+  CopyIcon,
+  Cross,
+  Hand,
+  Heart,
+  Loader2,
+  Settings,
+} from "lucide-react";
 import placeholder from "@/assets/images/placeholder.jpg";
 import type { CarouselApi } from "@/components/ui/carousel";
 import { UseEmblaCarouselType } from "embla-carousel-react";
@@ -52,7 +61,11 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { SharedProfile } from "@/lib/types";
 import { Checkbox } from "@/components/ui/checkbox";
-import { camelCaseToSeparatedWords } from "@/lib/utils";
+import {
+  camelCaseToSeparatedWords,
+  collapseDid,
+  copyToClipboard,
+} from "@/lib/utils";
 const formSchema = z.object({
   did: z.string().min(2),
   assignedName: z.string().min(2),
@@ -183,6 +196,32 @@ export default function ConnectPage() {
         <h1 className="text-3xl font-semibold text-center mb-4">
           Start Connecting
         </h1>
+        <div className="flex justify-between mb-8 items-center border-b border-border">
+          <div className="font-medium">Your DID</div>
+          <Button
+            variant="ghost"
+            onClick={async () => {
+              if (currentDid) {
+                const res = await copyToClipboard(currentDid);
+                if (res) {
+                  toast({
+                    title: "Copied DID to Clipboard.",
+                    description: "Succesfully copied your DID to clipboard.",
+                  });
+                }
+              }
+            }}
+          >
+            {currentDid ? (
+              <div className="flex gap-1 items-center">
+                <CopyIcon size={14} />{" "}
+                <span>{collapseDid(currentDid, 10)}</span>
+              </div>
+            ) : (
+              <Loader2 />
+            )}
+          </Button>
+        </div>
         <section className="mb-4">
           <div>
             <Form {...form}>
