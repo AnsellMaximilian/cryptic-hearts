@@ -39,6 +39,7 @@ import {
   Hand,
   Heart,
   Loader2,
+  Search,
   Settings,
 } from "lucide-react";
 import placeholder from "@/assets/images/placeholder.jpg";
@@ -196,8 +197,8 @@ export default function ConnectPage() {
         <h1 className="text-3xl font-semibold text-center mb-4">
           Start Connecting
         </h1>
-        <div className="flex justify-between mb-8 items-center border-b border-border">
-          <div className="font-medium">Your DID</div>
+        {/* <div className="flex justify-between mb-4 pb-4 items-end border-b border-border">
+          <div className="font-semibold text-lg">Your DID</div>
           <Button
             variant="ghost"
             onClick={async () => {
@@ -221,7 +222,7 @@ export default function ConnectPage() {
               <Loader2 />
             )}
           </Button>
-        </div>
+        </div> */}
         <section className="mb-4">
           <div>
             <Form {...form}>
@@ -333,58 +334,62 @@ export default function ConnectPage() {
             </Form>
           </div>
         </section>
-        <section className="flex justify-center py-8">
-          <Carousel className="w-full max-w-[24rem]" setApi={setApi}>
-            <CarouselContent>
-              {Array.from({ length: 5 }).map((_, index) => (
-                <CarouselItem key={index}>
-                  <div className="p-1">
-                    <Card className="overflow-hidden">
-                      <CardHeader className="p-0">
-                        <Image src={placeholder} alt="Profile picture" />
-                        <div className="p-6">
-                          <CardTitle>Jonah Jameson</CardTitle>
-                          <CardDescription>@jjamesonspider</CardDescription>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="grid gap-4"></CardContent>
-                      <CardFooter className="flex gap-4">
-                        <Button
-                          className="w-full"
-                          onClick={() => {
-                            if (api) {
-                              api.scrollPrev();
-                            }
-                          }}
-                        >
-                          <Check className="mr-2 h-4 w-4" /> Connect
-                        </Button>
-                        <Button
-                          className="w-full bg-[#FFEC19] hover:bg-[#fafd5e] text-black"
-                          onClick={() => {
-                            if (api) {
-                              api.scrollNext();
-                            }
-                          }}
-                        >
-                          <Heart
-                            className="mr-2 h-4 w-4 text-red-600"
-                            strokeWidth={5}
-                          />{" "}
-                          Unlock
-                        </Button>
-                        <Button variant="destructive">
-                          <Hand />
-                        </Button>
-                      </CardFooter>
-                    </Card>
-                  </div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            {/* <CarouselPrevious />
-            <CarouselNext /> */}
-          </Carousel>
+        <section className="py-8">
+          <h3 className="text-xl font-semibold flex gap-1 items-center mb-4">
+            <Search size={18} /> <span>Discover People</span>
+          </h3>
+          <div className="flex justify-center">
+            <Carousel className="w-full max-w-[24rem]" setApi={setApi}>
+              <CarouselContent>
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <CarouselItem key={index}>
+                    <div className="p-1">
+                      <Card className="overflow-hidden">
+                        <CardHeader className="p-0">
+                          <div className="p-6">
+                            <CardTitle>Jonah Jameson</CardTitle>
+                            <CardDescription>@jjamesonspider</CardDescription>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="grid gap-4"></CardContent>
+                        <CardFooter className="flex gap-4">
+                          <Button
+                            className="w-full"
+                            onClick={() => {
+                              if (api) {
+                                api.scrollPrev();
+                              }
+                            }}
+                          >
+                            <Check className="mr-2 h-4 w-4" /> Connect
+                          </Button>
+                          <Button
+                            className="w-full bg-[#FFEC19] hover:bg-[#fafd5e] text-black"
+                            onClick={() => {
+                              if (api) {
+                                api.scrollNext();
+                              }
+                            }}
+                          >
+                            <Heart
+                              className="mr-2 h-4 w-4 text-red-600"
+                              strokeWidth={5}
+                            />{" "}
+                            Unlock
+                          </Button>
+                          <Button variant="destructive">
+                            <Hand />
+                          </Button>
+                        </CardFooter>
+                      </Card>
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious />
+              <CarouselNext />
+            </Carousel>
+          </div>
         </section>
       </div>
     </div>

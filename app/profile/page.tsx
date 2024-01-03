@@ -216,8 +216,10 @@ export default function ProfilePage() {
                       } else {
                       }
                     }}
+                    className="flex gap-1"
                   >
-                    <CopyIcon size={14} /> {collapseDid(currentDid, 10)}
+                    <CopyIcon size={14} />{" "}
+                    <span>{collapseDid(currentDid, 10)}</span>
                   </Button>
                 </div>
                 <Link
