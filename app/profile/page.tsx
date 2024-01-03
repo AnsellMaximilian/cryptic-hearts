@@ -14,6 +14,7 @@ import {
   MapIcon,
   MapPin,
   MoreHorizontal,
+  Pencil,
   User,
   X,
 } from "lucide-react";
@@ -199,33 +200,45 @@ export default function ProfilePage() {
             <div className="space-y-4">
               <div>
                 <div className="flex justify-between">
-                  <h2 className="text-2xl font-semibold">
-                    {profile.fullName},{" "}
-                    {calculateAge(new Date(), new Date(profile.dateOfBirth))}
-                  </h2>
-                  <Button
-                    variant="ghost"
-                    onClick={async () => {
-                      const res = await copyToClipboard(currentDid);
-                      if (res) {
-                        toast({
-                          title: "Copied DID to Clipboard.",
-                          description:
-                            "Succesfully copied your DID to clipboard.",
-                        });
-                      } else {
-                      }
-                    }}
-                    className="flex gap-1"
-                  >
-                    <CopyIcon size={14} />{" "}
-                    <span>{collapseDid(currentDid, 10)}</span>
-                  </Button>
+                  <div>
+                    <h2 className="text-2xl font-semibold">
+                      {profile.fullName},{" "}
+                      {calculateAge(new Date(), new Date(profile.dateOfBirth))}
+                    </h2>
+                    <Link
+                      href="/profile"
+                      className="text-sm hover:underline"
+                    >{`@${profile.username}`}</Link>
+                  </div>
+
+                  <div className="flex gap-1">
+                    <Button
+                      variant="outline"
+                      className="rounded-full"
+                      size="icon"
+                    >
+                      <Pencil size={16} />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={async () => {
+                        const res = await copyToClipboard(currentDid);
+                        if (res) {
+                          toast({
+                            title: "Copied DID to Clipboard.",
+                            description:
+                              "Succesfully copied your DID to clipboard.",
+                          });
+                        } else {
+                        }
+                      }}
+                      className="flex gap-1 rounded-full"
+                    >
+                      <CopyIcon size={14} />{" "}
+                      <span>{collapseDid(currentDid, 10)}</span>
+                    </Button>
+                  </div>
                 </div>
-                <Link
-                  href="/profile"
-                  className="text-sm"
-                >{`@${profile.username}`}</Link>
               </div>
               <ul className="">
                 <li className="flex gap-1 items-center text-sm">
