@@ -264,12 +264,14 @@ export default function ProfilePage() {
               <TabsTrigger value="followers">Followers</TabsTrigger>
             </TabsList>
             <TabsContent value="following">
-              <div className="text-muted-foreground">People you follow.</div>
+              <div className="text-muted-foreground mb-2">
+                People you follow.
+              </div>
               {connectionLoading ? (
                 <div className="p-4 flex justify-center">
                   <Loader2 className="animate-spin" />
                 </div>
-              ) : (
+              ) : following.length > 0 ? (
                 <ul>
                   {following.map((followingData) => (
                     <li
@@ -338,17 +340,25 @@ export default function ProfilePage() {
                     </li>
                   ))}
                 </ul>
+              ) : (
+                <div className="text-center px-4 py-8 bg-accent rounded-md">
+                  Go to the{" "}
+                  <Link href="/connect" className="font-medium hover:underline">
+                    connect page
+                  </Link>{" "}
+                  to start following users.
+                </div>
               )}
             </TabsContent>
             <TabsContent value="followers">
-              <div className="text-muted-foreground">
+              <div className="text-muted-foreground mb-2">
                 People who follow you.
               </div>
               {connectionLoading ? (
                 <div className="p-4 flex justify-center">
                   <Loader2 className="text-[#FFEC19]" />
                 </div>
-              ) : (
+              ) : followers.length > 0 ? (
                 <ul>
                   {followers.map((follower) => (
                     <li
@@ -404,6 +414,22 @@ export default function ProfilePage() {
                     </li>
                   ))}
                 </ul>
+              ) : (
+                <div className="text-center px-4 py-8 bg-accent rounded-md">
+                  People who have followed you will show up here. Share your{" "}
+                  <button
+                    className="font-medium hover:underline"
+                    onClick={async () => {
+                      if (currentDid) {
+                        const res = await copyToClipboard(currentDid);
+                        if (res) toast({ title: "DID copied." });
+                      }
+                    }}
+                  >
+                    DID
+                  </button>{" "}
+                  to start getting followers.
+                </div>
               )}
             </TabsContent>
           </Tabs>
