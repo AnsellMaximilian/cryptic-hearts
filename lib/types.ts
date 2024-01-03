@@ -13,6 +13,7 @@ export type SharedProfile = {
 };
 
 export type Following = {
+  recordId: string;
   did: string;
   assignedName: string;
   sharedProfile?: SharedProfile;

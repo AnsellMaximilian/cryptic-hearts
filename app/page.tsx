@@ -121,6 +121,11 @@ export default function Home() {
                 Decentralized Social Media Platform
               </p>
             </div>
+            <div className="mt-8">
+              <div>Selective profile sharing</div>
+              <div>Follow/Unfollow</div>
+              <div>Post</div>
+            </div>
           </div>
         </section>
         <footer className="bg-black text-primary-foreground">

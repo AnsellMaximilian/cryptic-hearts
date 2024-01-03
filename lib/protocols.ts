@@ -78,6 +78,11 @@ export const protocolDefinition: ProtocolsConfigureRequest["message"]["definitio
             who: "anyone",
             can: "read",
           },
+          {
+            who: "author",
+            of: "following",
+            can: "delete",
+          },
         ],
         sharedProfile: {
           $actions: [

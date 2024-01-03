@@ -102,9 +102,17 @@ export default function ProfilePage() {
         });
 
         if (followingRecords) {
-          const following = (await Promise.all(
-            followingRecords.map((record) => record.data.json())
-          )) as Following[];
+          const following = await Promise.all<Following>(
+            followingRecords.map(
+              (record) =>
+                new Promise(async (resolve) =>
+                  resolve({
+                    ...(await record.data.json()),
+                    recordId: record.id,
+                  })
+                )
+            )
+          );
           setFollowing(following);
         }
 
@@ -142,6 +150,42 @@ export default function ProfilePage() {
       }
     })();
   }, [web5, currentDid]);
+
+  const handleUnfollow = async (recordId: string, did: string) => {
+    if (web5) {
+      const localDeleteRes = await web5.dwn.records.delete({
+        message: {
+          recordId: recordId,
+        },
+      });
+
+      const remoteDeleteRes = await web5.dwn.records.delete({
+        from: did,
+        message: {
+          recordId: recordId,
+        },
+      });
+
+      console.log({ remoteDeleteRes, localDeleteRes });
+      const localSuccess =
+        localDeleteRes.status.code >= 200 && localDeleteRes.status.code < 300;
+      const remoteSuccess =
+        remoteDeleteRes.status.code >= 200 && remoteDeleteRes.status.code < 300;
+      if (localSuccess) {
+        console.log("Local Delete success");
+      }
+      if (remoteSuccess) {
+        console.log("Remote del success");
+      }
+
+      if (localSuccess && remoteSuccess) {
+        toast({ title: "Successfully Unfollowed" });
+        setFollowing((prev) =>
+          prev.filter((data) => data.recordId !== recordId)
+        );
+      }
+    }
+  };
 
   return (
     <div>
@@ -229,7 +273,7 @@ export default function ProfilePage() {
                 <ul>
                   {following.map((followingData) => (
                     <li
-                      key={followingData.did}
+                      key={followingData.recordId}
                       className="p-4 hover:bg-accent border-b border-border flex justify-between items-center"
                     >
                       <div>
@@ -276,7 +320,15 @@ export default function ProfilePage() {
                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem>
-                              <button className="flex gap-1 items-center">
+                              <button
+                                className="flex gap-1 items-center"
+                                onClick={() =>
+                                  handleUnfollow(
+                                    followingData.recordId,
+                                    followingData.did
+                                  )
+                                }
+                              >
                                 <X size={14} /> <span>Unfollow</span>
                               </button>
                             </DropdownMenuItem>
