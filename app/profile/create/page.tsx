@@ -53,7 +53,7 @@ const formSchema = z.object({
 });
 
 export default function Home() {
-  const { currentDid, web5, setProfile } = useWeb5();
+  const { currentDid, web5, setProfile, profile } = useWeb5();
   const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -63,6 +63,10 @@ export default function Home() {
       gender: "MALE",
     },
   });
+
+  useEffect(() => {
+    if (profile) router.push("/profile");
+  }, [profile, router]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     console.log(values);

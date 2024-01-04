@@ -74,6 +74,11 @@ export default function ProfilePage() {
   const [followers, setFollowers] = useState<Follower[]>([]);
 
   const [connectionLoading, setConnectionLoading] = useState(false);
+
+  useEffect(() => {
+    if (!profile && !profileLoading) router.push("/profile/create");
+  }, [router, profile, profileLoading]);
+
   useEffect(() => {
     (async () => {
       if (web5 && currentDid) {

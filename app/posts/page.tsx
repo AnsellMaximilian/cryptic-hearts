@@ -86,7 +86,13 @@ const formSchema = z.object({
 });
 
 export default function PostsPage() {
-  const { currentDid, web5, setProfile, profile } = useWeb5();
+  const {
+    currentDid,
+    web5,
+    setProfile,
+    profile,
+    loading: profileLoading,
+  } = useWeb5();
   const [followers, setFollowers] = useState<Follower[]>([]);
   const [following, setFollowing] = useState<Following[]>([]);
   const router = useRouter();
@@ -98,6 +104,11 @@ export default function PostsPage() {
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [selectedPostImage, setSelectedPostImage] = useState<File | null>(null);
+
+  useEffect(() => {
+    if (!profile && !profileLoading) router.push("/profile/create");
+  }, [router, profile, profileLoading]);
+
   useEffect(() => {
     (async () => {
       if (web5 && currentDid) {
