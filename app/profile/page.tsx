@@ -217,13 +217,15 @@ export default function ProfilePage() {
                   </div>
 
                   <div className="flex gap-1">
-                    <Button
-                      variant="outline"
-                      className="rounded-full"
-                      size="icon"
+                    <Link
+                      href="/profile/edit"
+                      className={cn(
+                        buttonVariants({ variant: "outline", size: "icon" }),
+                        "rounded-full"
+                      )}
                     >
                       <Pencil size={16} />
-                    </Button>
+                    </Link>
                     <Button
                       variant="outline"
                       onClick={async () => {

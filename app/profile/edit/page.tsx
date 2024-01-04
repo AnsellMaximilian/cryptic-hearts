@@ -43,13 +43,19 @@ import { protocolDefinition, schemas } from "@/lib/protocols";
 import { useRouter } from "next/navigation";
 import ProfileForm, { profileFormSchema } from "@/components/profile-form";
 
-export default function Home() {
-  const { currentDid, web5, setProfile, profile } = useWeb5();
+export default function ProfileEditPage() {
+  const {
+    currentDid,
+    web5,
+    setProfile,
+    profile,
+    loading: profileLoading,
+  } = useWeb5();
   const router = useRouter();
 
   useEffect(() => {
-    if (profile) router.push("/profile");
-  }, [profile, router]);
+    if (!profile && !profileLoading) router.push("/profile/create");
+  }, [profile, router, profileLoading]);
 
   async function handleSubmit(values: z.infer<typeof profileFormSchema>) {
     console.log(values);
@@ -98,7 +104,7 @@ export default function Home() {
       </Link>
       <div className="p-4">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold">Create Your Profile</h1>
+          <h1 className="text-4xl font-bold">Edit Your Profile</h1>
           <div className="font-semibold">
             <span>
               Your DID:{" "}
@@ -110,7 +116,7 @@ export default function Home() {
           </div>
         </div>
         <div className="mx-auto max-w-3xl bg-white p-8 rounded-md shadow-md">
-          <ProfileForm onSubmit={handleSubmit} />
+          <ProfileForm onSubmit={handleSubmit} profile={profile ?? undefined} />
         </div>
       </div>
     </div>
