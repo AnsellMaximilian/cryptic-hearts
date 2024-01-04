@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, buttonVariants } from "@/components/ui/button";
-import { useWeb5 } from "@/contexts/Web5Context";
+import { Profile, useWeb5 } from "@/contexts/Web5Context";
 import { cn, collapseDid } from "@/lib/utils";
 import { ArrowLeft, Copy } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
@@ -38,10 +38,11 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { protocolDefinition, schemas } from "@/lib/protocols";
 import { useRouter } from "next/navigation";
 import ProfileForm, { profileFormSchema } from "@/components/profile-form";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function ProfileEditPage() {
   const {
@@ -52,42 +53,54 @@ export default function ProfileEditPage() {
     loading: profileLoading,
   } = useWeb5();
   const router = useRouter();
+  const { toast } = useToast();
+  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     if (!profile && !profileLoading) router.push("/profile/create");
   }, [profile, router, profileLoading]);
 
   async function handleSubmit(values: z.infer<typeof profileFormSchema>) {
-    console.log(values);
-    if (web5) {
-      const { record: profileRecord, status: createStatus } =
-        await web5.dwn.records.create({
-          data: {
-            username: values.username,
-            fullName: values.fullName,
-            gender: values.gender,
-            city: values.city,
-            country: values.country,
-            occupation: values.occupation,
-            description: values.description,
-            dateOfBirth: values.dateOfBirth
-              ? format(values.dateOfBirth, "yyyy-MM-dd")
-              : values.dateOfBirth,
-          },
-          message: {
-            schema: schemas.profile,
-            dataFormat: "application/json",
+    if (web5 && profile) {
+      setIsUpdating(true);
+      let { record: profileRecord, status } = await web5.dwn.records.read({
+        message: {
+          filter: {
+            recordId: profile.recordId,
             protocol: protocolDefinition.protocol,
             protocolPath: "profile",
+            schema: schemas.profile,
           },
-        });
-      setProfile({
-        ...(await profileRecord?.data.json()),
-        recordId: profileRecord?.id,
-        contextId: profileRecord?.contextId,
+        },
       });
 
-      router.push("/profile");
+      if (profileRecord) {
+        const profileData: Omit<Profile, "recordId" | "contextId"> = {
+          username: values.username,
+          fullName: values.fullName,
+          gender: values.gender,
+          city: values.city,
+          country: values.country,
+          occupation: values.occupation,
+          description: values.description,
+          dateOfBirth: values.dateOfBirth
+            ? format(values.dateOfBirth, "yyyy-MM-dd")
+            : values.dateOfBirth,
+        };
+        const { status } = await profileRecord.update({ data: profileData });
+        console.log(status);
+        if (status.code >= 200 && status.code < 300) {
+          setProfile({
+            ...profile,
+            ...profileData,
+          });
+          toast({ title: "Updated profile" });
+          router.push("/profile");
+        } else {
+          toast({ title: "Error updating profile." });
+        }
+      }
+      setIsUpdating(false);
     }
   }
 
@@ -116,7 +129,11 @@ export default function ProfileEditPage() {
           </div>
         </div>
         <div className="mx-auto max-w-3xl bg-white p-8 rounded-md shadow-md">
-          <ProfileForm onSubmit={handleSubmit} profile={profile ?? undefined} />
+          <ProfileForm
+            onSubmit={handleSubmit}
+            profile={profile ?? undefined}
+            loading={isUpdating}
+          />
         </div>
       </div>
     </div>

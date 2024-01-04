@@ -43,20 +43,21 @@ import React from "react";
 export const profileFormSchema = z.object({
   username: z.string().min(2).max(50),
   fullName: z.string().min(2).max(50),
-  dateOfBirth: z.date().optional(),
+  dateOfBirth: z.date(),
   city: z.string().min(2),
   country: z.string().min(2),
   occupation: z.string().min(2),
-  description: z.string().optional(),
+  description: z.string(),
   gender: z.enum(["MALE", "FEMALE", "CUSTOM"]),
 });
 
 type Props = {
   onSubmit: (values: z.infer<typeof profileFormSchema>) => Promise<void>;
   profile?: Profile;
+  loading?: boolean;
 };
 
-export default function ProfileForm({ onSubmit, profile }: Props) {
+export default function ProfileForm({ onSubmit, profile, loading }: Props) {
   const form = useForm<z.infer<typeof profileFormSchema>>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
@@ -255,7 +256,10 @@ export default function ProfileForm({ onSubmit, profile }: Props) {
                         mode="single"
                         selected={form.getValues("dateOfBirth")}
                         onSelect={(value) => {
-                          form.setValue("dateOfBirth", value);
+                          form.setValue(
+                            "dateOfBirth",
+                            value ? value : new Date()
+                          );
                         }}
                         initialFocus
                       />
@@ -268,7 +272,9 @@ export default function ProfileForm({ onSubmit, profile }: Props) {
             </FormItem>
           )}
         />
-        <Button type="submit">Create</Button>
+        <Button type="submit" disabled={!!loading}>
+          {profile ? "Update" : "Create"}
+        </Button>
       </form>
     </Form>
   );
