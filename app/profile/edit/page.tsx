@@ -3,7 +3,7 @@
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Profile, useWeb5 } from "@/contexts/Web5Context";
 import { cn, collapseDid } from "@/lib/utils";
-import { ArrowLeft, Copy } from "lucide-react";
+import { ArrowLeft, Copy, UsersRound } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
@@ -44,6 +44,16 @@ import { useRouter } from "next/navigation";
 import ProfileForm, { profileFormSchema } from "@/components/profile-form";
 import { useToast } from "@/components/ui/use-toast";
 import { Following, SharedProfile } from "@/lib/types";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export default function ProfileEditPage() {
   const {
@@ -57,6 +67,7 @@ export default function ProfileEditPage() {
   const { toast } = useToast();
   const [isUpdating, setIsUpdating] = useState(false);
   const [following, setFollowing] = useState<Following[]>([]);
+  const [selectedDids, setSelectedDids] = useState<string[]>([]);
 
   useEffect(() => {
     if (!profile && !profileLoading) router.push("/profile/create");
@@ -163,53 +174,57 @@ export default function ProfileEditPage() {
 
       // broadcast change
       const broadcastChanges = await Promise.all<boolean>(
-        following.map(
-          (followingData) =>
-            new Promise(async (resolve) => {
-              if (followingData.sharedProfile) {
-                const { record: profileRecord, status: readRemoteStatus } =
-                  await web5.dwn.records.read({
-                    message: {
-                      filter: {
-                        parentId: followingData.recordId,
-                        contextId: followingData.contextId,
-                        recordId: followingData.sharedProfile.recordId,
-                        protocol: protocolDefinition.protocol,
-                        protocolPath: "following/sharedProfile",
-                        schema: schemas.sharedProfile,
+        following
+          .filter((followingData) => selectedDids.includes(followingData.did))
+          .map(
+            (followingData) =>
+              new Promise(async (resolve) => {
+                if (followingData.sharedProfile) {
+                  const { record: profileRecord, status: readRemoteStatus } =
+                    await web5.dwn.records.read({
+                      message: {
+                        filter: {
+                          parentId: followingData.recordId,
+                          contextId: followingData.contextId,
+                          recordId: followingData.sharedProfile.recordId,
+                          protocol: protocolDefinition.protocol,
+                          protocolPath: "following/sharedProfile",
+                          schema: schemas.sharedProfile,
+                        },
                       },
-                    },
-                  });
-                console.log("READ REMOTE");
-                console.log({ readRemoteStatus });
-                if (profileRecord) {
-                  const newSharedProfile: {
-                    [key: string]: string | undefined;
-                  } = {};
-                  for (const key in followingData.sharedProfile) {
-                    const safeKey = key as keyof Omit<
-                      Profile,
-                      "recordId" | "contextId"
-                    >;
-                    newSharedProfile[safeKey] = profileData[safeKey];
-                  }
-                  console.log({ newSharedProfile });
-                  const { status: updateStatus } = await profileRecord.update({
-                    data: newSharedProfile,
-                  });
-                  console.log({ updateStatus });
-                  if (updateStatus.code >= 200 && updateStatus.code < 300) {
-                    const { status: sendStatus } = await profileRecord.send(
-                      followingData.did
+                    });
+                  console.log("READ REMOTE");
+                  console.log({ readRemoteStatus });
+                  if (profileRecord) {
+                    const newSharedProfile: {
+                      [key: string]: string | undefined;
+                    } = {};
+                    for (const key in followingData.sharedProfile) {
+                      const safeKey = key as keyof Omit<
+                        Profile,
+                        "recordId" | "contextId"
+                      >;
+                      newSharedProfile[safeKey] = profileData[safeKey];
+                    }
+                    console.log({ newSharedProfile });
+                    const { status: updateStatus } = await profileRecord.update(
+                      {
+                        data: newSharedProfile,
+                      }
                     );
-                    console.log({ sendStatus });
-                    resolve(true);
+                    console.log({ updateStatus });
+                    if (updateStatus.code >= 200 && updateStatus.code < 300) {
+                      const { status: sendStatus } = await profileRecord.send(
+                        followingData.did
+                      );
+                      console.log({ sendStatus });
+                      resolve(true);
+                    }
                   }
                 }
-              }
-              resolve(false);
-            })
-        )
+                resolve(false);
+              })
+          )
       );
 
       console.log(broadcastChanges);
@@ -247,6 +262,73 @@ export default function ProfileEditPage() {
             onSubmit={handleSubmit}
             profile={profile ?? undefined}
             loading={isUpdating}
+            shareButton={
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="flex gap-1"
+                  >
+                    <UsersRound size={16} />
+                    <span>Share</span>
+                    <span className="ml-1 bg-primary text-primary-foreground rounded-full block w-4 h-4 text-xs">
+                      {selectedDids.length}
+                    </span>
+                  </Button>
+                </DialogTrigger>
+                {profile && (
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>Broadcast the Update</DialogTitle>
+                      <DialogDescription>
+                        Choose which users you follow should receive this
+                        update.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      {following.map((followingData) => (
+                        <div
+                          key={followingData.did}
+                          className="flex flex-row items-start space-x-3 space-y-0"
+                        >
+                          <FormControl>
+                            <Checkbox
+                              id={followingData.did}
+                              checked={selectedDids.includes(followingData.did)}
+                              onCheckedChange={(checked) => {
+                                setSelectedDids((prev) =>
+                                  checked
+                                    ? [...prev, followingData.did]
+                                    : prev.filter(
+                                        (existingKey) =>
+                                          existingKey !== followingData.did
+                                      )
+                                );
+                              }}
+                            />
+                          </FormControl>
+                          <FormLabel
+                            htmlFor={followingData.did}
+                            className="font-normal flex flex-col"
+                          >
+                            <span className="font-semibold">
+                              {followingData.assignedName}
+                            </span>
+                            <span> {collapseDid(followingData.did)}</span>
+                          </FormLabel>
+                        </div>
+                      ))}
+                    </div>
+                    <DialogFooter>
+                      <DialogClose asChild>
+                        <Button type="submit">Set</Button>
+                      </DialogClose>
+                    </DialogFooter>
+                  </DialogContent>
+                )}
+              </Dialog>
+            }
           />
         </div>
       </div>

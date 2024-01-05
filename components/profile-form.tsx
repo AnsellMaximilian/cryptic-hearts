@@ -55,9 +55,15 @@ type Props = {
   onSubmit: (values: z.infer<typeof profileFormSchema>) => Promise<void>;
   profile?: Profile;
   loading?: boolean;
+  shareButton?: React.ReactNode;
 };
 
-export default function ProfileForm({ onSubmit, profile, loading }: Props) {
+export default function ProfileForm({
+  onSubmit,
+  profile,
+  loading,
+  shareButton,
+}: Props) {
   const form = useForm<z.infer<typeof profileFormSchema>>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
@@ -272,9 +278,12 @@ export default function ProfileForm({ onSubmit, profile, loading }: Props) {
             </FormItem>
           )}
         />
-        <Button type="submit" disabled={!!loading}>
-          {profile ? "Update" : "Create"}
-        </Button>
+        <div className="flex gap-2">
+          <Button type="submit" disabled={!!loading}>
+            {profile ? "Update" : "Create"}
+          </Button>
+          {shareButton}
+        </div>
       </form>
     </Form>
   );
