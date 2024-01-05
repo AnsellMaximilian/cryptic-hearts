@@ -166,7 +166,6 @@ export default function ProfileEditPage() {
             ...profileData,
           });
           toast({ title: "Updated profile" });
-          // router.push("/profile");
         } else {
           toast({ title: "Error updating profile." });
         }
@@ -230,6 +229,7 @@ export default function ProfileEditPage() {
       console.log(broadcastChanges);
 
       setIsUpdating(false);
+      router.push("/profile");
     }
   }
 
