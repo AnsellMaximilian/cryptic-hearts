@@ -14,6 +14,7 @@ export type SharedProfile = {
 
 export type Following = {
   recordId: string;
+  contextId: string;
   did: string;
   assignedName: string;
   sharedProfile?: SharedProfile;

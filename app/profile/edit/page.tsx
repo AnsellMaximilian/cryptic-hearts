@@ -43,6 +43,7 @@ import { protocolDefinition, schemas } from "@/lib/protocols";
 import { useRouter } from "next/navigation";
 import ProfileForm, { profileFormSchema } from "@/components/profile-form";
 import { useToast } from "@/components/ui/use-toast";
+import { Following, SharedProfile } from "@/lib/types";
 
 export default function ProfileEditPage() {
   const {
@@ -55,13 +56,70 @@ export default function ProfileEditPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isUpdating, setIsUpdating] = useState(false);
+  const [following, setFollowing] = useState<Following[]>([]);
 
   useEffect(() => {
     if (!profile && !profileLoading) router.push("/profile/create");
   }, [profile, router, profileLoading]);
+  useEffect(() => {
+    (async () => {
+      if (web5 && currentDid) {
+        const { records: followingRecords } = await web5.dwn.records.query({
+          message: {
+            filter: {
+              author: currentDid,
+              protocol: protocolDefinition.protocol,
+              protocolPath: "following",
+              schema: schemas.following,
+            },
+          },
+        });
+
+        if (followingRecords) {
+          const followers: Following[] = await Promise.all<Following>(
+            followingRecords.map((record) => {
+              return new Promise(async (resolve) => {
+                const followingData: Omit<Following, "sharedProfile"> = {
+                  ...(await record.data.json()),
+                  recordId: record.id,
+                };
+                const { records: sharedProfileRecords } =
+                  await web5.dwn.records.query({
+                    from: followingData.did,
+                    message: {
+                      filter: {
+                        recipient: followingData.did,
+                        parentId: record.id,
+                        protocol: protocolDefinition.protocol,
+                        protocolPath: "following/sharedProfile",
+                        schema: schemas.sharedProfile,
+                      },
+                    },
+                  });
+                if (sharedProfileRecords?.length) {
+                  const sharedProfile: SharedProfile = {
+                    ...(await sharedProfileRecords[0].data.json()),
+                    recordId: sharedProfileRecords[0].id,
+                    contextId: sharedProfileRecords[0].contextId,
+                  };
+                  resolve({ ...followingData, sharedProfile });
+                } else {
+                  resolve({ ...followingData });
+                }
+              });
+            })
+          );
+          setFollowing(followers);
+        }
+      }
+    })();
+  }, [web5, currentDid]);
+
+  console.log({ following });
 
   async function handleSubmit(values: z.infer<typeof profileFormSchema>) {
     if (web5 && profile) {
+      let profileData: Omit<Profile, "recordId" | "contextId">;
       setIsUpdating(true);
       let { record: profileRecord, status } = await web5.dwn.records.read({
         message: {
@@ -75,7 +133,7 @@ export default function ProfileEditPage() {
       });
 
       if (profileRecord) {
-        const profileData: Omit<Profile, "recordId" | "contextId"> = {
+        profileData = {
           username: values.username,
           fullName: values.fullName,
           gender: values.gender,
@@ -87,19 +145,75 @@ export default function ProfileEditPage() {
             ? format(values.dateOfBirth, "yyyy-MM-dd")
             : values.dateOfBirth,
         };
-        const { status } = await profileRecord.update({ data: profileData });
-        console.log(status);
+        const { status: localStatus } = await profileRecord.update({
+          data: profileData,
+        });
+        console.log({ localStatus });
         if (status.code >= 200 && status.code < 300) {
           setProfile({
             ...profile,
             ...profileData,
           });
           toast({ title: "Updated profile" });
-          router.push("/profile");
+          // router.push("/profile");
         } else {
           toast({ title: "Error updating profile." });
         }
       }
+
+      // broadcast change
+      const broadcastChanges = await Promise.all<boolean>(
+        following.map(
+          (followingData) =>
+            new Promise(async (resolve) => {
+              if (followingData.sharedProfile) {
+                const { record: profileRecord, status: readRemoteStatus } =
+                  await web5.dwn.records.read({
+                    message: {
+                      filter: {
+                        parentId: followingData.recordId,
+                        contextId: followingData.contextId,
+                        recordId: followingData.sharedProfile.recordId,
+                        protocol: protocolDefinition.protocol,
+                        protocolPath: "following/sharedProfile",
+                        schema: schemas.sharedProfile,
+                      },
+                    },
+                  });
+                console.log("READ REMOTE");
+                console.log({ readRemoteStatus });
+                if (profileRecord) {
+                  const newSharedProfile: {
+                    [key: string]: string | undefined;
+                  } = {};
+                  for (const key in followingData.sharedProfile) {
+                    const safeKey = key as keyof Omit<
+                      Profile,
+                      "recordId" | "contextId"
+                    >;
+                    newSharedProfile[safeKey] = profileData[safeKey];
+                  }
+                  console.log({ newSharedProfile });
+                  const { status: updateStatus } = await profileRecord.update({
+                    data: newSharedProfile,
+                  });
+                  console.log({ updateStatus });
+                  if (updateStatus.code >= 200 && updateStatus.code < 300) {
+                    const { status: sendStatus } = await profileRecord.send(
+                      followingData.did
+                    );
+                    console.log({ sendStatus });
+                    resolve(true);
+                  }
+                }
+              }
+              resolve(false);
+            })
+        )
+      );
+
+      console.log(broadcastChanges);
+
       setIsUpdating(false);
     }
   }

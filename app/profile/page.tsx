@@ -140,8 +140,10 @@ export default function ProfilePage() {
                     },
                   });
                 if (sharedProfileRecords?.length) {
-                  const sharedProfile: SharedProfile =
-                    await sharedProfileRecords[0].data.json();
+                  const sharedProfile: SharedProfile = {
+                    ...(await sharedProfileRecords[0].data.json()),
+                    recordId: sharedProfileRecords[0].id,
+                  };
                   resolve({ did: record.author, sharedProfile });
                 } else {
                   resolve({ did: record.author });
@@ -156,6 +158,8 @@ export default function ProfilePage() {
       }
     })();
   }, [web5, currentDid]);
+
+  console.log({ followers });
 
   const handleUnfollow = async (recordId: string, did: string) => {
     if (web5) {
