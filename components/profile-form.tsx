@@ -38,7 +38,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
-import React from "react";
+import React, { useEffect } from "react";
 
 export const profileFormSchema = z.object({
   username: z.string().min(2).max(50),
@@ -79,6 +79,19 @@ export default function ProfileForm({
       description: profile ? profile.description : "",
     },
   });
+
+  useEffect(() => {
+    if (profile) {
+      form.setValue("username", profile.username);
+      form.setValue("gender", profile.gender as "MALE" | "FEMALE" | "CUSTOM");
+      form.setValue("fullName", profile.fullName);
+      form.setValue("dateOfBirth", new Date(profile.dateOfBirth));
+      form.setValue("city", profile.city);
+      form.setValue("country", profile.country);
+      form.setValue("occupation", profile.occupation);
+      form.setValue("description", profile.description);
+    }
+  }, [profile, form]);
 
   return (
     <Form {...form}>
