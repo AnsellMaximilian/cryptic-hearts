@@ -79,9 +79,9 @@ import { protocolDefinition, schemas } from "@/lib/protocols";
 import { useToast } from "@/components/ui/use-toast";
 import { Follower, Following, Message, SharedProfile } from "@/lib/types";
 import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@radix-ui/react-scroll-area";
 import { Types } from "ably";
 import { useChannel, useAbly } from "ably/react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const formSchema = z.object({
   message: z.string().min(1, {
@@ -425,20 +425,6 @@ export default function ConnectionPage() {
                                       </div>
                                     );
                                   })}
-                                  {/* <div className="flex">
-                                    <div className="bg-primary text-primary-foreground rounded-md p-1">
-                                      <span className="text-sm">
-                                        I will be here.
-                                      </span>
-                                    </div>
-                                  </div>
-                                  <div className="flex">
-                                    <div className="ml-auto bg-[#FFEC19] text-black rounded-md p-1">
-                                      <span className="text-sm">
-                                        I will be here.
-                                      </span>
-                                    </div>
-                                  </div> */}
                                 </div>
                               </ScrollArea>
                               <Form {...form}>
