@@ -71,7 +71,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Header from "@/components/ui/header";
@@ -80,6 +80,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { Follower, Following, Message, SharedProfile } from "@/lib/types";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@radix-ui/react-scroll-area";
+import { Types } from "ably";
+import { useChannel, useAbly } from "ably/react";
 
 const formSchema = z.object({
   message: z.string().min(1, {
@@ -94,6 +96,8 @@ export default function ConnectionPage() {
   const decodedDid = decodeURIComponent(did as string);
 
   const router = useRouter();
+  const ablyClient = useAbly();
+
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [following, setFollowing] = useState<Following | null>(null);
@@ -102,6 +106,30 @@ export default function ConnectionPage() {
   const [messages, setMessages] = useState<Message[]>([]);
 
   const [didResolved, setDidResolved] = useState(false);
+
+  const chatChannel = useMemo(() => {
+    const channelId = currentDid
+      ? currentDid > decodedDid
+        ? `${currentDid?.slice(0, 15)}-${decodedDid.slice(0, 15)}`
+        : `${decodedDid.slice(0, 15)}-${currentDid?.slice(0, 15)}`
+      : "";
+    console.log({ channelId });
+    return ablyClient.channels.get(`messages:${channelId}`);
+  }, [currentDid, ablyClient, decodedDid]);
+
+  useEffect(() => {
+    const listener = (ablyMessage: Types.Message) => {
+      if (ablyMessage.name === "add") {
+        const message: Message = ablyMessage.data;
+        setMessages((prev) => [...prev, message]);
+      }
+    };
+    chatChannel.subscribe(listener);
+
+    return () => {
+      chatChannel.unsubscribe(listener);
+    };
+  }, [chatChannel]);
 
   useEffect(() => {
     (async () => {
@@ -242,8 +270,13 @@ export default function ConnectionPage() {
             )
           );
 
-          console.log({ messages });
-          setMessages(messages);
+          setMessages(
+            messages.sort((a, b) => {
+              const dateA = new Date(a.dateCreated);
+              const dateB = new Date(b.dateCreated);
+              return dateA.getTime() - dateB.getTime();
+            })
+          );
         } catch (error) {
           console.log("Error fetching messages.");
         }
@@ -294,7 +327,9 @@ export default function ConnectionPage() {
             authorId: messageRecord.author,
           };
 
-          setMessages((prev) => [...prev, message]);
+          chatChannel.publish("add", message);
+
+          // setMessages((prev) => [...prev, message]);
         }
       }
     }
@@ -381,7 +416,7 @@ export default function ConnectionPage() {
                                             ownMessage
                                               ? "bg-primary text-primary-foreground ml-auto"
                                               : "bg-[#FFEC19] text-black"
-                                          } rounded-md p-1`}
+                                          } rounded-md py-1 px-2`}
                                         >
                                           <span className="text-sm">
                                             {message.content}
