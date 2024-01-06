@@ -9,7 +9,7 @@ export const revalidate = 0;
 
 export async function GET(request: Request) {
   const tokenParams: Types.TokenParams = {
-    clientId: `mading-live`,
+    clientId: `cryptic-hearts`,
     capability: { "*": ["publish", "subscribe", "presence"] },
   };
 
