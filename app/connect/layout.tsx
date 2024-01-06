@@ -7,7 +7,7 @@ import { AblyProvider, useChannel, usePresence } from "ably/react";
 const client = new Realtime.Promise({
   authUrl: `${
     process.env.NEXT_PUBLIC_MODE === "production"
-      ? "https://mading-live.vercel.app"
+      ? "https://cryptic-hearts.vercel.app"
       : "http://localhost:3000"
   }/api/ably-auth`,
 });
