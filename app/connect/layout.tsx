@@ -5,6 +5,7 @@ import { Realtime } from "ably";
 import { AblyProvider, useChannel, usePresence } from "ably/react";
 
 const client = new Realtime.Promise({
+  authMethod: "POST",
   authUrl: `${
     process.env.NEXT_PUBLIC_MODE === "production"
       ? "https://cryptic-hearts.vercel.app"
