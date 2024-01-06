@@ -4,6 +4,9 @@ import dots from "@/assets/images/dots.svg";
 import Image from "next/image";
 import logoFull from "@/assets/images/logo-full.svg";
 import logoFullDark from "@/assets/images/logo-full-dark.svg";
+import profileSS from "@/assets/images/demo/profile.png";
+import postsSS from "@/assets/images/demo/posts.png";
+import connectSS from "@/assets/images/demo/connect.png";
 import bg from "@/assets/images/bg.png";
 import hero from "@/assets/images/hero-big.svg";
 import hero2 from "@/assets/images/hero2.svg";
@@ -119,14 +122,73 @@ export default function Home() {
           <div className="max-w-5xl mx-auto container">
             <div className="text-center">
               <h2 className="font-bold text-3xl">Features</h2>
-              <p className="text-lg font-light">
-                Decentralized Social Media Platform
-              </p>
+              <p className="text-lg font-light">Take Advantage of Web 5.0</p>
             </div>
-            <div className="mt-8">
-              <div>Selective profile sharing</div>
-              <div>Follow/Unfollow</div>
-              <div>Post</div>
+            <div className="mt-8 space-y-16">
+              <div className="flex items-center">
+                <Image
+                  src={profileSS}
+                  className="h-96 w-auto"
+                  alt="profile page"
+                />
+                <div className="p-4">
+                  <h3 className="text-2xl font-semibold tracking-tight mb-2">
+                    Your Own Private Profile
+                  </h3>
+                  <p className="text-xl tracking-tight font-light mb-4">
+                    Using Web 5.0 technologies, you&apos;ll be able to{" "}
+                    <span className="font-semibold">own</span> your profile.
+                    Unless you chose otherwise, you will be the only one able to
+                    see your data.
+                  </p>
+                  <Link href="/profile" className={cn(buttonVariants())}>
+                    Go to Profile
+                  </Link>
+                </div>
+              </div>
+              <div className="flex items-center bg-[#FFEC19] p-8 rounded-md">
+                <div className="pr-2">
+                  <h3 className="text-2xl font-semibold tracking-tight mb-2">
+                    Connect with People
+                  </h3>
+                  <p className="text-xl tracking-tight font-light mb-4">
+                    Follow and get followed.{" "}
+                    <span className="font-semibold">Selectively</span> pick and
+                    choose what part of your private profile to share and with
+                    whom to share it with.
+                  </p>
+                  <Link href="/connect" className={cn(buttonVariants())}>
+                    Start Connecting
+                  </Link>
+                </div>
+                <Image
+                  src={connectSS}
+                  className="h-96 w-auto"
+                  alt="connect page"
+                />
+              </div>
+              <div className="flex items-center">
+                <Image
+                  src={postsSS}
+                  className="h-96 w-auto"
+                  alt="profile page"
+                />
+                <div className="p-4">
+                  <h3 className="text-2xl font-semibold tracking-tight mb-2">
+                    Selective Posting
+                  </h3>
+                  <p className="text-xl tracking-tight font-light mb-4">
+                    Instead of posting into some centralized database, own your
+                    posts and send them to{" "}
+                    <span className="font-semibold">specific</span> recipients
+                    of your choosing. <span className="font-semibold">You</span>{" "}
+                    decide who sees your posts.
+                  </p>
+                  <Link href="/posts" className={cn(buttonVariants())}>
+                    Go to Posts
+                  </Link>
+                </div>
+              </div>
             </div>
           </div>
         </section>
