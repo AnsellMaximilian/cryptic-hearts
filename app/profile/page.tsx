@@ -283,7 +283,7 @@ export default function ProfilePage() {
             </div>
           )}
         </section>
-        <section>
+        <section className="pb-8">
           <Tabs defaultValue="following" className="">
             <TabsList>
               <TabsTrigger value="following">Following</TabsTrigger>

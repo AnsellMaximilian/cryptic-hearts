@@ -7,6 +7,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import QRCode from "react-qr-code";
+
 import {
   Carousel,
   CarouselContent,
@@ -26,7 +28,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Header from "@/components/ui/header";
 import { Profile, useWeb5 } from "@/contexts/Web5Context";
@@ -36,6 +38,7 @@ import {
   Check,
   CopyIcon,
   Cross,
+  FileLock2,
   Hand,
   Heart,
   Loader2,
@@ -46,6 +49,7 @@ import placeholder from "@/assets/images/placeholder.jpg";
 import type { CarouselApi } from "@/components/ui/carousel";
 import { UseEmblaCarouselType } from "embla-carousel-react";
 import { protocolDefinition, schemas } from "@/lib/protocols";
+import connected from "@/assets/images/connected.svg";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -74,6 +78,9 @@ const formSchema = z.object({
 export default function ConnectPage() {
   const { currentDid, web5, setProfile, profile } = useWeb5();
   const router = useRouter();
+  const params = useSearchParams();
+  const did = params.get("did");
+
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [api, setApi] = useState<CarouselApi | undefined>();
@@ -89,6 +96,13 @@ export default function ConnectPage() {
       assignedName: "",
     },
   });
+
+  useEffect(() => {
+    if (did) {
+      form.setValue("did", did);
+    }
+  }, [did, form]);
+
   useEffect(() => {
     if (!api) {
       return;
@@ -334,7 +348,7 @@ export default function ConnectPage() {
             </Form>
           </div>
         </section>
-        <section className="py-8">
+        {/* <section className="py-8">
           <h3 className="text-xl font-semibold flex gap-1 items-center mb-4">
             <Search size={18} /> <span>Discover People</span>
           </h3>
@@ -389,6 +403,116 @@ export default function ConnectPage() {
               <CarouselPrevious />
               <CarouselNext />
             </Carousel>
+          </div>
+        </section> */}
+        <section className="py-8">
+          <h3 className="text-xl font-semibold flex gap-1 items-center mb-4">
+            <Search size={18} /> <span>Get Discovered</span>
+          </h3>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="border-r border-border p-2">
+              <div className="flex items-center justify-center">
+                <Image
+                  src={connected}
+                  alt="connected"
+                  width={200}
+                  height={200}
+                  className="w-56"
+                />
+              </div>
+              <p className="font-light tracking-tight">
+                Share your DID so other people can follow you. When someone
+                follows you, they will share a portion of their private profile
+                to you. You will also be able to selectively share posts to
+                them.
+              </p>
+            </div>
+            <div className="p-2">
+              {currentDid ? (
+                <div className="flex flex-col justify-center items-center gap-2">
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <button className="p-2 rounded-md border border-border bg-accent block">
+                        <QRCode
+                          size={256}
+                          style={{
+                            height: "200px",
+                            maxWidth: "100%",
+                            width: "auto",
+                          }}
+                          value={`https://cryptic-hearts.vercel.app/connect?did=${currentDid}`}
+                          viewBox={`0 0 256 256`}
+                        />
+                      </button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[750px]">
+                      <DialogHeader>
+                        <DialogTitle>Your DID</DialogTitle>
+                        <DialogDescription>
+                          Share this DID to start getting followers.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="pt-4">
+                        <div className="max-w-[400px] mx-auto">
+                          <QRCode
+                            size={256}
+                            style={{
+                              height: "auto",
+                              maxWidth: "100%",
+                              width: "100%",
+                            }}
+                            value={`https://cryptic-hearts.vercel.app/connect?did=${currentDid}`}
+                            viewBox={`0 0 256 256`}
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter className="flex justify-end">
+                        <Button
+                          variant="outline"
+                          onClick={async () => {
+                            const res = await copyToClipboard(
+                              `https://cryptic-hearts.vercel.app/connect?did=${currentDid}`
+                            );
+                            if (res) {
+                              toast({
+                                title: "Copied link to Clipboard.",
+                                description:
+                                  "Succesfully copied your connect link to clipboard.",
+                              });
+                            }
+                          }}
+                        >
+                          Copy Link
+                        </Button>
+                        <Button>Close</Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                  <Button
+                    variant="outline"
+                    onClick={async () => {
+                      const res = await copyToClipboard(currentDid);
+                      if (res) {
+                        toast({
+                          title: "Copied DID to Clipboard.",
+                          description:
+                            "Succesfully copied your DID to clipboard.",
+                        });
+                      }
+                    }}
+                    className="flex gap-1 rounded-full"
+                  >
+                    <CopyIcon size={14} />{" "}
+                    <span>{collapseDid(currentDid, 10)}</span>
+                  </Button>
+                  <div className="font-medium tracking-tight flex justify-center gap-1 items-center">
+                    <FileLock2 size={16} /> <span>Your DID</span>
+                  </div>
+                </div>
+              ) : (
+                <Loader2 size={28} className="animate-spin" />
+              )}
+            </div>
           </div>
         </section>
       </div>

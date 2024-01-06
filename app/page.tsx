@@ -42,30 +42,32 @@ export default function Home() {
           className="flex"
           style={{ backgroundImage: `url('${bg.src}')` }}
         >
-          <div className="py-32 px-4 bg-contain bg-no-repeat bg-right w-7/12 space-y-4">
-            <h1 className="text-4xl font-bold">
-              Connecting Through Decentralization
-            </h1>
-            <p className=" text-xl font-medium tracking-tighter text-secondary-foreground">
-              Utilize the brand new Web 5.0 to revolutionize your online social
-              media game! Unlock the full potential of the new era of the
-              internet to protect your privacy and own your data.
-            </p>
-            {loading ? (
-              <Button disabled>Loading</Button>
-            ) : (
-              <Link
-                className={cn(buttonVariants({}))}
-                href={profile ? "/profile" : "/profile/create"}
-              >
-                Get Started
-              </Link>
-            )}
+          <div className="max-w-5xl mx-auto container flex">
+            <div className="py-28 px-4 bg-contain bg-no-repeat bg-right w-6/12 space-y-4">
+              <h1 className="text-4xl font-bold">
+                Connecting Through Decentralization
+              </h1>
+              <p className=" text-xl font-medium tracking-tighter text-secondary-foreground">
+                Utilize the brand new Web 5.0 to revolutionize your online
+                social media game! Unlock the full potential of the new era of
+                the internet to protect your privacy and own your data.
+              </p>
+              {loading ? (
+                <Button disabled>Loading</Button>
+              ) : (
+                <Link
+                  className={cn(buttonVariants({}))}
+                  href={profile ? "/profile" : "/profile/create"}
+                >
+                  Get Started
+                </Link>
+              )}
+            </div>
+            <div
+              style={{ backgroundImage: `url('${hero.src}')` }}
+              className="grow bg-no-repeat bg-right bg-contain"
+            ></div>
           </div>
-          <div
-            style={{ backgroundImage: `url('${hero.src}')` }}
-            className="grow bg-no-repeat bg-right bg-contain"
-          ></div>
         </section>
         <section
           className="pt-16 pb-48 bg-[#FFEC19] bg-[length:250px] bg-bottom bg-repeat-x relative"
