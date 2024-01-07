@@ -202,7 +202,7 @@ export default function Home() {
               />
             </Link>
             <div className="text-[12px] md:text-sm text-center mt-2">
-              Ansell Maximilian · &copy;2023
+              Ansell Maximilian · &copy;2024
             </div>
           </div>
         </footer>
