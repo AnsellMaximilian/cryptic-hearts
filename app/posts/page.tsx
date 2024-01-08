@@ -1,8 +1,7 @@
 "use client";
-import logoFull from "@/assets/images/logo-full.svg";
 
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Profile, useWeb5 } from "@/contexts/Web5Context";
+import { useWeb5 } from "@/contexts/Web5Context";
 import {
   Dialog,
   DialogClose,
@@ -13,65 +12,24 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  calculateAge,
-  camelCaseToSeparatedWords,
-  cn,
-  collapseDid,
-  copyToClipboard,
-} from "@/lib/utils";
-import {
-  ArrowLeft,
-  Cake,
-  Copy,
-  CopyIcon,
-  LampDesk,
-  MapIcon,
-  MapPin,
-  MoreHorizontal,
-  User,
-  UserRoundCheck,
-  UserRoundX,
-  X,
-  Image as ImageIcon,
-  Users,
-  UsersRound,
-} from "lucide-react";
+import { collapseDid } from "@/lib/utils";
+import { X, Image as ImageIcon, UsersRound } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar } from "@/components/ui/calendar";
-import { format, formatDistance } from "date-fns";
-import { Calendar as CalendarIcon } from "lucide-react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import dots from "@/assets/images/dots.svg";
+import { formatDistance } from "date-fns";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Header from "@/components/ui/header";
 import { protocolDefinition, schemas } from "@/lib/protocols";
@@ -80,19 +38,14 @@ import { Follower, Following, Post, SharedProfile } from "@/lib/types";
 import { Checkbox } from "@/components/ui/checkbox";
 import { v4 as uuidv4 } from "uuid";
 import { Skeleton } from "@/components/ui/skeleton";
+import dwnService from "@/services/dwnService";
 
 const formSchema = z.object({
   content: z.string().min(10),
 });
 
 export default function PostsPage() {
-  const {
-    currentDid,
-    web5,
-    setProfile,
-    profile,
-    loading: profileLoading,
-  } = useWeb5();
+  const { currentDid, web5, profile, loading: profileLoading } = useWeb5();
   const [followers, setFollowers] = useState<Follower[]>([]);
   const [following, setFollowing] = useState<Following[]>([]);
   const router = useRouter();
@@ -113,113 +66,21 @@ export default function PostsPage() {
     (async () => {
       if (web5 && currentDid) {
         setPostsLoading(true);
+        const dwn = dwnService(web5);
         let following: Following[] = [];
-        const { records: followingRecords } = await web5.dwn.records.query({
-          message: {
-            filter: {
-              author: currentDid,
 
-              protocol: protocolDefinition.protocol,
-              protocolPath: "following",
-              schema: schemas.following,
-            },
-          },
-        });
+        following = (await dwn.getFollowing(currentDid)) ?? [];
 
-        const { records: followerRecords } = await web5.dwn.records.query({
-          from: currentDid,
-          message: {
-            filter: {
-              recipient: currentDid,
-              protocol: protocolDefinition.protocol,
-              protocolPath: "following",
-              schema: schemas.following,
-            },
-          },
-        });
+        setFollowing(following);
 
-        if (followingRecords) {
-          following = (await Promise.all(
-            followingRecords.map((record) => record.data.json())
-          )) as Following[];
-          setFollowing(following);
-        }
-
-        if (followerRecords) {
-          const followers: Follower[] = await Promise.all<Follower>(
-            followerRecords.map((record) => {
-              return new Promise(async (resolve) => {
-                const { records: sharedProfileRecords } =
-                  await web5.dwn.records.query({
-                    from: currentDid,
-                    message: {
-                      filter: {
-                        recipient: currentDid,
-                        parentId: record.id,
-                        protocol: protocolDefinition.protocol,
-                        protocolPath: "following/sharedProfile",
-                        schema: schemas.sharedProfile,
-                      },
-                    },
-                  });
-                if (sharedProfileRecords?.length) {
-                  const sharedProfile: SharedProfile =
-                    await sharedProfileRecords[0].data.json();
-                  resolve({ did: record.author, sharedProfile });
-                } else {
-                  resolve({ did: record.author });
-                }
-              });
-            })
-          );
+        const followers = await dwn.getFollowers(currentDid);
+        if (followers) {
           setFollowers(followers);
         }
-        const { records: ownPostRecords } = await web5.dwn.records.query({
-          message: {
-            filter: {
-              author: currentDid,
-              protocol: protocolDefinition.protocol,
-              protocolPath: "post",
-              schema: schemas.post,
-            },
-          },
-        });
 
-        const { records: sentPostRecords } = await web5.dwn.records.query({
-          from: currentDid,
-          message: {
-            filter: {
-              recipient: currentDid,
-              protocol: protocolDefinition.protocol,
-              protocolPath: "post",
-              schema: schemas.post,
-            },
-          },
-        });
+        const posts = await dwn.getPosts(currentDid);
 
-        console.log({ sentPostRecords });
-
-        if (
-          ownPostRecords &&
-          sentPostRecords
-          // &&
-          // ownPostRecords.length === 100
-        ) {
-          const posts = (await Promise.all(
-            [...ownPostRecords, ...sentPostRecords].map(
-              (record) =>
-                new Promise<Post>(async (resolve) =>
-                  resolve({
-                    ...(await record.data.json()),
-                    recordId: record.id,
-                    authorId: record.author,
-                    authorLabel: "Anonymous",
-                    dateCreated: record.dateCreated,
-                  })
-                )
-            )
-          )) as Post[];
-
+        if (posts) {
           setPosts(
             posts
               .filter(

@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Realtime } from "ably";
-import { AblyProvider, useChannel, usePresence } from "ably/react";
+import { AblyProvider } from "ably/react";
 
 const client = new Realtime.Promise({
   authMethod: "POST",

@@ -1,86 +1,41 @@
 "use client";
-import logoFull from "@/assets/images/logo-full.svg";
 
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Profile, useWeb5 } from "@/contexts/Web5Context";
+import { Button } from "@/components/ui/button";
+import { useWeb5 } from "@/contexts/Web5Context";
 import {
-  calculateAge,
   camelCaseToSeparatedWords,
-  cn,
   collapseDid,
   copyToClipboard,
 } from "@/lib/utils";
 import {
-  ArrowLeft,
-  Cake,
   Copy,
-  CopyIcon,
-  LampDesk,
-  MapIcon,
-  MapPin,
   MessagesSquare,
-  MoreHorizontal,
-  Send,
   SendHorizontal,
-  User,
   UserRoundCheck,
   UserRoundX,
-  X,
 } from "lucide-react";
 import {
   Sheet,
-  SheetClose,
   SheetContent,
   SheetDescription,
-  SheetFooter,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
 
-import { Textarea } from "@/components/ui/textarea";
-import { Calendar } from "@/components/ui/calendar";
-import { format } from "date-fns";
-import { Calendar as CalendarIcon } from "lucide-react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import dots from "@/assets/images/dots.svg";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Image from "next/image";
 import Header from "@/components/ui/header";
 import { protocolDefinition, schemas } from "@/lib/protocols";
 import { useToast } from "@/components/ui/use-toast";
 import { Follower, Following, Message, SharedProfile } from "@/lib/types";
-import { Label } from "@/components/ui/label";
 import { Types } from "ably";
-import { useChannel, useAbly } from "ably/react";
+import { useAbly } from "ably/react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const formSchema = z.object({
@@ -95,7 +50,6 @@ export default function ConnectionPage() {
   const { did } = useParams();
   const decodedDid = decodeURIComponent(did as string);
 
-  const router = useRouter();
   const ablyClient = useAbly();
 
   const { toast } = useToast();
@@ -133,6 +87,7 @@ export default function ConnectionPage() {
 
   useEffect(() => {
     (async () => {
+      // TODO: MOVE TO DWN SERVICE
       if (web5 && currentDid) {
         const resolveRes = await web5.did.resolve(
           decodeURIComponent(did as string)

@@ -1,72 +1,38 @@
 "use client";
-import logoFull from "@/assets/images/logo-full.svg";
-
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Profile, useWeb5 } from "@/contexts/Web5Context";
+import { useWeb5 } from "@/contexts/Web5Context";
 import { calculateAge, cn, collapseDid, copyToClipboard } from "@/lib/utils";
 import {
-  ArrowLeft,
   Cake,
   Copy,
   CopyIcon,
   LampDesk,
   Loader2,
-  MapIcon,
   MapPin,
   MoreHorizontal,
   Pencil,
   User,
   X,
 } from "lucide-react";
-import { Textarea } from "@/components/ui/textarea";
-import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon } from "lucide-react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import dots from "@/assets/images/dots.svg";
-import * as z from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import Header from "@/components/ui/header";
 import { protocolDefinition, schemas } from "@/lib/protocols";
 import { useToast } from "@/components/ui/use-toast";
 import { Follower, Following, SharedProfile } from "@/lib/types";
+import dwnService from "@/services/dwnService";
 
 export default function ProfilePage() {
-  const {
-    currentDid,
-    web5,
-    setProfile,
-    profile,
-    loading: profileLoading,
-  } = useWeb5();
+  const { currentDid, web5, profile, loading: profileLoading } = useWeb5();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -83,74 +49,16 @@ export default function ProfilePage() {
     (async () => {
       if (web5 && currentDid) {
         setConnectionLoading(true);
-        const { records: followingRecords } = await web5.dwn.records.query({
-          message: {
-            filter: {
-              author: currentDid,
 
-              protocol: protocolDefinition.protocol,
-              protocolPath: "following",
-              schema: schemas.following,
-            },
-          },
-        });
+        const dwn = dwnService(web5);
 
-        const { records: followerRecords } = await web5.dwn.records.query({
-          from: currentDid,
-          message: {
-            filter: {
-              recipient: currentDid,
-              protocol: protocolDefinition.protocol,
-              protocolPath: "following",
-              schema: schemas.following,
-            },
-          },
-        });
-
-        if (followingRecords) {
-          const following = await Promise.all<Following>(
-            followingRecords.map(
-              (record) =>
-                new Promise(async (resolve) =>
-                  resolve({
-                    ...(await record.data.json()),
-                    recordId: record.id,
-                  })
-                )
-            )
-          );
+        const following = await dwn.getFollowing(currentDid);
+        if (following) {
           setFollowing(following);
         }
 
-        if (followerRecords) {
-          const followers: Follower[] = await Promise.all<Follower>(
-            followerRecords.map((record) => {
-              return new Promise(async (resolve) => {
-                const { records: sharedProfileRecords } =
-                  await web5.dwn.records.query({
-                    from: currentDid,
-                    message: {
-                      filter: {
-                        recipient: currentDid,
-                        parentId: record.id,
-                        protocol: protocolDefinition.protocol,
-                        protocolPath: "following/sharedProfile",
-                        schema: schemas.sharedProfile,
-                      },
-                    },
-                  });
-                if (sharedProfileRecords?.length) {
-                  const sharedProfile: SharedProfile = {
-                    ...(await sharedProfileRecords[0].data.json()),
-                    recordId: sharedProfileRecords[0].id,
-                  };
-                  resolve({ did: record.author, sharedProfile });
-                } else {
-                  resolve({ did: record.author });
-                }
-              });
-            })
-          );
+        const followers = await dwn.getFollowers(currentDid);
+        if (followers) {
           setFollowers(followers);
         }
 
@@ -163,32 +71,10 @@ export default function ProfilePage() {
 
   const handleUnfollow = async (recordId: string, did: string) => {
     if (web5) {
-      const localDeleteRes = await web5.dwn.records.delete({
-        message: {
-          recordId: recordId,
-        },
-      });
+      const dwn = dwnService(web5);
+      const res = await dwn.unfollow(recordId, did);
 
-      const remoteDeleteRes = await web5.dwn.records.delete({
-        from: did,
-        message: {
-          recordId: recordId,
-        },
-      });
-
-      console.log({ remoteDeleteRes, localDeleteRes });
-      const localSuccess =
-        localDeleteRes.status.code >= 200 && localDeleteRes.status.code < 300;
-      const remoteSuccess =
-        remoteDeleteRes.status.code >= 200 && remoteDeleteRes.status.code < 300;
-      if (localSuccess) {
-        console.log("Local Delete success");
-      }
-      if (remoteSuccess) {
-        console.log("Remote del success");
-      }
-
-      if (localSuccess && remoteSuccess) {
+      if (res) {
         toast({ title: "Successfully Unfollowed" });
         setFollowing((prev) =>
           prev.filter((data) => data.recordId !== recordId)
